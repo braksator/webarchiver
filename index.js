@@ -140,7 +140,7 @@ module.exports = {
                 // Remove directories and skip the rest of the loop.
                 files.splice(i--, 1);
                 numFiles--;
-                this.barTick(bar, i+1);
+                this.barTick(bar, i + 1);
                 continue;
             }
             else if (isBinaryFile.sync(startPath + files[i])) {
@@ -155,7 +155,7 @@ module.exports = {
                     fs.writeFileSync(outDir + files[i], file, 'binary');
                 }
 
-                this.barTick(bar, i+1);
+                this.barTick(bar, i + 1);
             }
             else {
                 // Process text files.
@@ -224,11 +224,11 @@ module.exports = {
                         fs.writeFileSync(outDir + options.vfile, vfile);
                     }
                     else {
-                        this.barTick(bar, i+1);
+                        this.barTick(bar, i + 1);
                     }
                 }
                 else {
-                    this.barTick(bar, i+1);
+                    this.barTick(bar, i + 1);
                 }
 
                 // Write the current text file.
