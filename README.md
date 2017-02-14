@@ -1,5 +1,5 @@
 WebArchiver
-=========
+===========
 
 Deduplicates and compresses a collection of website files and the resulting files must be interpreted with PHP.
 
