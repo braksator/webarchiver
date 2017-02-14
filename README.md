@@ -50,17 +50,17 @@ You may override some or all of these options.
 
 | Option name       | Type          | Description                                                                                                               | Default       |
 | ---               | ---           | ---                                                                                                                       |---            |
-| files             | string        | A glob pattern that indicates which files to process, or an array of glob strings.                                        |               |
-| justcopy          | bool          | Glob string/array of files to not process.                                                                                |               |
-| inplace           | bool          | If set to true will modify the existing files rather than creating new files.                                             |               |
+| files             | string        | A glob pattern that indicates which files to process and output, or an array of glob strings.                             |               |
 | output            | string        | The path of an output directory if options.inplace is not used.                                                           |               |
+| justcopy          | bool          | Glob string/array of files to not process.                                                                                | false         |
+| inplace           | bool          | If set to true will modify the existing files rather than creating new files.                                             | false         |
 | dedupe            | object|false  | Options to override deduplication behaviour as per the common-substrings package (or set to false to not deduplicate).    | (See below)   |
 | minify            | object|false  | Options to override minification behaviour as per the html-minifier package (or set to false to not minify).              | (See below)   |
 | vfile             | string        | The name of the php variables file if 'v.php' is not acceptable.                                                          | 'v.php'       |
 | dbdir             | string        | The name of the key-file storage directory if 'vdb' is not acceptable.                                                    | 'vdb'         |
 | fullnest          | bool          | Whether to maintain full path nesting in the output directory.                                                            | false         |
 | cache             | int|bool      | The size of the memory cache in terms of key-values, true for unlimited, false for none.                                  | 500           |
-| keepdb            | bool          | Whether to keep the key-file storage after completion, useful for batching.                                               |               |
+| keepdb            | bool          | Whether to keep the key-file storage after completion, useful for batching.                                               | false         |
 | skipcontaining    | bool          | An array of strings, if a text file contains any of them it will be 'just copied'.                                        | ['<?']        |
 
 
