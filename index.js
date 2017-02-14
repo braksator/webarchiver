@@ -9,7 +9,7 @@ var mergeOptions = require('merge-options');
 var keyFileStorage = require("key-file-storage");
 var isBinaryFile = require("isbinaryfile");
 var path = require('path');
-var getDirName = path.dirname;
+var ProgressBar = require('progress');
 
 module.exports = {
 
@@ -108,6 +108,12 @@ module.exports = {
         // Number of files.
         var numFiles = files.length;
 
+        // Set up progress bar.
+        var bar = new ProgressBar('  processing [:bar] :percent :etas', {
+            width: 100,
+            total: (numFiles*(numFiles + 1))/2
+        });
+
         // Length of the start path.
         var startPathLength = startPath.length;
 
@@ -134,19 +140,22 @@ module.exports = {
                 // Remove directories and skip the rest of the loop.
                 files.splice(i--, 1);
                 numFiles--;
+                this.barTick(bar, i+1);
                 continue;
             }
             else if (isBinaryFile.sync(startPath + files[i])) {
                 // Process binary files.
 
                 // Ensure the output dir exists.
-                mkdirp(getDirName(outDir + files[i]));
+                mkdirp(path.dirname(outDir + files[i]));
 
                 if (startPath + files[i] != outDir + files[i]) {
                     // Copy the file over.
                     var file = fs.readFileSync(startPath + files[i], 'binary');
                     fs.writeFileSync(outDir + files[i], file, 'binary');
                 }
+
+                this.barTick(bar, i+1);
             }
             else {
                 // Process text files.
@@ -193,7 +202,7 @@ module.exports = {
 
                         if (long.length > 0) {
                             // Apply the deduplication replacements.
-                            str = this.applyReplacements(str, long, numFiles, files, i, startPath, outDir, varName, wrapped, replacements, options);
+                            str = this.applyReplacements(str, long, numFiles, files, i, startPath, outDir, varName, wrapped, replacements, options, bar);
                         }
 
                         // Output the PHP vfile.
@@ -214,10 +223,16 @@ module.exports = {
                         }
                         fs.writeFileSync(outDir + options.vfile, vfile);
                     }
+                    else {
+                        this.barTick(bar, i+1);
+                    }
+                }
+                else {
+                    this.barTick(bar, i+1);
                 }
 
                 // Write the current text file.
-                mkdirp(getDirName(outDir + files[i]));
+                mkdirp(path.dirname(outDir + files[i]));
                 fs.writeFileSync(outDir + files[i], this.fixCodes(str));
             }
 
@@ -225,8 +240,14 @@ module.exports = {
 
     },
 
+    barTick: function (bar, numTicks) {
+        for (var i = 0; i < numTicks; ++i) {
+            bar.tick();
+        }
+    },
+
     // Apply replacements.
-    applyReplacements: function (str, long, numFiles, files, currentFileIndex, startPath, outDir, varName, wrapped, replacements, options) {
+    applyReplacements: function (str, long, numFiles, files, currentFileIndex, startPath, outDir, varName, wrapped, replacements, options, bar) {
         // Add wrap to current file.
         str = this.prepend(options.vfile, (files[currentFileIndex].match(/\//g) || []).length) + this.addSlashes(str) + this.append();
         wrapped[this.base64Enc(files[currentFileIndex])] = true;
@@ -238,6 +259,8 @@ module.exports = {
 
             // Make the replacecment in the current file.
             str = this.replaceAll(str, long[j].str, this.shortCode(varName[0]));
+
+            this.barTick(bar, 1);
 
             // Make the replacement in the other files.
             for (var k in long[j].occ) {
@@ -251,6 +274,11 @@ module.exports = {
                     str2 = this.replaceAll(str2, long[j].str, this.shortCode(varName[0]));
                     fs.writeFileSync(outDir + files[k], this.fixCodes(str2));
                 }
+                this.barTick(bar, 1);
+            }
+            var remainder = j - long[j].occ.length - 1;
+            if (remainder > 0) {
+                this.barTick(bar, remaining);
             }
 
             // varName has been spent, so update to another one.

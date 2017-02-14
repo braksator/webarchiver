@@ -179,20 +179,20 @@ describe('#webArchiver', function () {
 
     it('should throw an error when no options given', function () {
         expect(function () {
-            app.htmlArchiver();
+            app.webArchiver();
         }).to.throw("No options given.");
     });
 
     it('should throw an error when options is empty', function () {
         expect(function () {
-            app.htmlArchiver({});
+            app.webArchiver({});
         }).to.throw("No input files defined in options.");
     });
 
     it('should throw an error when files are not found', function () {
         var dir = "test/single";
         expect(function () {
-            app.htmlArchiver({
+            app.webArchiver({
                 files: "bogus.file.pattern",
                 output: dir
             });
@@ -201,7 +201,7 @@ describe('#webArchiver', function () {
 
     it('should throw an error when output options do not make sense', function () {
         expect(function () {
-            app.htmlArchiver({files: "test/testdata/*.html"});
+            app.webArchiver({files: "test/testdata/*.html"});
         }).to.throw("You must set the 'inplace' option to true or provide an output directory path to 'output'.");
     });
 
@@ -218,7 +218,7 @@ describe('#webArchiver', function () {
             output: dir
         };
 
-        var result = app.htmlArchiver(options);
+        var result = app.webArchiver(options);
         assert.isDirectory(dir, "Is Directory");
     });
 
@@ -237,7 +237,7 @@ describe('#webArchiver', function () {
             //dedupe: false
         };
 
-        var result = app.htmlArchiver(options);
+        var result = app.webArchiver(options);
         assert.isDirectory(dir, "Is Directory");
     });
 
@@ -255,7 +255,7 @@ describe('#webArchiver', function () {
             output: dir
         };
 
-        var result = app.htmlArchiver(options);
+        var result = app.webArchiver(options);
         assert.isDirectory(dir, "Is Directory");
     });
 
@@ -274,7 +274,7 @@ describe('#webArchiver', function () {
             output: dir
         };
 
-        var result = app.htmlArchiver(options);
+        var result = app.webArchiver(options);
         assert.isDirectory(dir, "Is Directory");
 
         var buf1 = fs.readFileSync(dir + '/skip.php');
@@ -297,7 +297,7 @@ describe('#webArchiver', function () {
             output: dir
         };
 
-        var result = app.htmlArchiver(options);
+        var result = app.webArchiver(options);
         assert.isDirectory(dir, "Is Directory");
 
         var buf1 = fs.readFileSync(dir + '/nested/nested.html');
@@ -320,7 +320,7 @@ describe('#webArchiver', function () {
             output: dir
         };
 
-        var result = app.htmlArchiver(options);
+        var result = app.webArchiver(options);
         assert.isDirectory(dir, "Is Directory");
 
         var buf1 = fs.readFileSync(dir + '/justcopy.html');
@@ -343,7 +343,7 @@ describe('#webArchiver', function () {
             output: dir
         };
 
-        var result = app.htmlArchiver(options);
+        var result = app.webArchiver(options);
         assert.isDirectory(dir, "Is Directory");
 
         setTimeout(function () {
