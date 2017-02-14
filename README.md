@@ -33,15 +33,15 @@ Here's the command to download and install from NPM:
 
 ### In a Node.js module
 
-    ```javascript
-    var webarchiver = require('webarchiver').webArchiver;
+```javascript
+var webarchiver = require('webarchiver').webArchiver;
 
-    webarchiver({
-        files: "path/to/my/files/**",
-        output: "path/to/output"
-    });
-    ```
-    This module exports all of it's functions so you can potentially overwrite some parts of it too!
+webarchiver({
+    files: "path/to/my/files/**",
+    output: "path/to/output"
+});
+```
+This module exports all of it's functions so you can potentially overwrite some parts of it too!
 
 
 ## Options
