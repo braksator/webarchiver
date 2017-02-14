@@ -1,0 +1,28 @@
+{
+  "name": "webarchiver",
+  "version": "1.0.0",
+  "description": "Deduplicates and compresses a directory of website files and the result uses PHP.",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha --reporter spec",
+    "coverage": "istanbul cover ./node_modules/mocha/bin/_mocha -- -R spec"
+  },
+  "author": "Daniel Braksator",
+  "license": "ISC",
+  "dependencies": {
+    "del": "^2.2.2",
+    "globby": "^6.1.0",
+    "html-minifier": "^3.3.1",
+    "isbinaryfile": "^3.0.2",
+    "key-file-storage": "^2.1.1",
+    "merge-options": "0.0.64",
+    "mkdirp": "^0.5.1"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "chai-fs": "^1.0.0",
+    "istanbul": "^0.4.5",
+    "mocha": "^3.2.0",
+    "mocha-eslint": "^3.0.1"
+  }
+}
