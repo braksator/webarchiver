@@ -25,12 +25,6 @@ Here's the command to download and install from NPM:
 
 ## Usage
 
-### Using Grunt task runner
-    @todo
-
-### Using Gulp build system
-    @todo
-
 ### In a Node.js module
 
 ```javascript
@@ -136,7 +130,7 @@ assignment, and string concatenation.  You should have no worries about which ve
 
 You should also consider compressing your images.  Many websites do not correctly compress their images, particularly
 older websites you may be archiving.  There are several NPM packages you could use to automate this process, like
-**grunt-contrib-imagemin** or **gulp-imagemin**.
+**imagemin**.
 
 ## Future
 
