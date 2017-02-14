@@ -111,7 +111,7 @@ module.exports = {
         // Set up progress bar.
         var bar = new ProgressBar('  processing [:bar] :percent :etas', {
             width: 100,
-            total: (numFiles*(numFiles + 1))/2
+            total: (numFiles * (numFiles + 1)) / 2
         });
 
         // Length of the start path.
@@ -140,7 +140,7 @@ module.exports = {
                 // Remove directories and skip the rest of the loop.
                 files.splice(i--, 1);
                 numFiles--;
-                this.barTick(bar, i + 1);
+                bar.tick(i + 1);
                 continue;
             }
             else if (isBinaryFile.sync(startPath + files[i])) {
@@ -155,7 +155,7 @@ module.exports = {
                     fs.writeFileSync(outDir + files[i], file, 'binary');
                 }
 
-                this.barTick(bar, i + 1);
+                bar.tick(i + 1);
             }
             else {
                 // Process text files.
@@ -224,11 +224,11 @@ module.exports = {
                         fs.writeFileSync(outDir + options.vfile, vfile);
                     }
                     else {
-                        this.barTick(bar, i + 1);
+                        bar.tick(i + 1);
                     }
                 }
                 else {
-                    this.barTick(bar, i + 1);
+                    bar.tick(i + 1);
                 }
 
                 // Write the current text file.
@@ -238,12 +238,6 @@ module.exports = {
 
         }
 
-    },
-
-    barTick: function (bar, numTicks) {
-        for (var i = 0; i < numTicks; ++i) {
-            bar.tick();
-        }
     },
 
     // Apply replacements.
@@ -260,7 +254,7 @@ module.exports = {
             // Make the replacecment in the current file.
             str = this.replaceAll(str, long[j].str, this.shortCode(varName[0]));
 
-            this.barTick(bar, 1);
+            bar.tick(1);
 
             // Make the replacement in the other files.
             for (var k in long[j].occ) {
@@ -274,11 +268,11 @@ module.exports = {
                     str2 = this.replaceAll(str2, long[j].str, this.shortCode(varName[0]));
                     fs.writeFileSync(outDir + files[k], this.fixCodes(str2));
                 }
-                this.barTick(bar, 1);
+                bar.tick(1);
             }
             var remainder = j - long[j].occ.length - 1;
             if (remainder > 0) {
-                this.barTick(bar, remaining);
+                bar.tick(remaining);
             }
 
             // varName has been spent, so update to another one.
