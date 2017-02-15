@@ -330,8 +330,9 @@ module.exports = {
         var A = strings.concat().sort(), a1 = A[0], a2 = A[A.length - 1], L = a1.length, i = 0;
         while (i < L && a1.charAt(i) === a2.charAt(i)) i++;
         var sharedStart = a1.substring(0, i);
+        if (sharedStart.indexOf("/") > -1) sharedStart = sharedStart.substr(0, 1 + sharedStart.lastIndexOf("/"));
         // Omit chars after the final forward-slash.
-        return sharedStart.substr(0, 1 + sharedStart.lastIndexOf("/"));
+        return sharedStart;
     },
 
     // Get the output directory path.

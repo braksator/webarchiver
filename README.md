@@ -27,14 +27,19 @@ Here's the command to download and install from NPM:
 
 ### In a Node.js module
 
-```javascript
-var webarchiver = require('webarchiver').webArchiver;
+The easiest way is to just `npm init` a new project, and stick your website files in a sub-directory.  Create your
+index.js file and put this in:
 
-webarchiver({
-    files: "path/to/my/files/**",
-    output: "path/to/output"
+```javascript
+var wa = require('webarchiver');
+
+wa.webArchiver({
+    files: "website/**",
+    output: "archived"
 });
 ```
+Where 'website' is the directory containing your files and 'archived' is where they will be written.
+
 This module exports all of it's functions so you can potentially overwrite some parts of it too!
 
 
