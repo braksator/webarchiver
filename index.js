@@ -101,6 +101,7 @@ module.exports = {
         if (!options.keepdb) {
             del.sync(outDir + options.dbdir);
         }
+
     },
 
     // File processing function.
@@ -114,7 +115,7 @@ module.exports = {
 
             var bar = new ProgressBar('  processing [:bar] :percent :etas', {
                 width: 100,
-                total: (numFiles * (numFiles + 1)) / 2
+                total: ((numFiles * (numFiles + 1)) / 2) + 1 // This is a 1+2+3+4.. algorithm plus one extra tick.
             });
         }
         else {
@@ -247,6 +248,8 @@ module.exports = {
             fs.writeFileSync(outDir + options.vfile, this.fixCodes(vfile));
         }
 
+        // Saved one tick for the end so as not to be misleading with 100% after all files are processed.
+        bar.tick(1);
     },
 
     // Apply replacements.
