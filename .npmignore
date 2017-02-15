@@ -1,2 +1,9 @@
+/node_modules
+/test/output
+/coverage
+/npm-debug.log
 test
 .idea
+.gitignore
+.npmignore
+.eslintrc
