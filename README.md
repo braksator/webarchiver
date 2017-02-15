@@ -21,7 +21,7 @@ This is a Node.JS module available from the Node Package Manager (NPM).
 
 Here's the command to download and install from NPM:
 
-`npm install webarchiver`
+`npm install webarchiver -S`
 
 ## Usage
 

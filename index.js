@@ -147,7 +147,7 @@ module.exports = {
                 // Process binary files.
 
                 // Ensure the output dir exists.
-                mkdirp(path.dirname(outDir + files[i]));
+                mkdirp.sync(path.dirname(outDir + files[i]));
 
                 if (startPath + files[i] != outDir + files[i]) {
                     // Copy the file over.
@@ -232,7 +232,7 @@ module.exports = {
                 }
 
                 // Write the current text file.
-                mkdirp(path.dirname(outDir + files[i]));
+                mkdirp.sync(path.dirname(outDir + files[i]));
                 fs.writeFileSync(outDir + files[i], this.fixCodes(str));
             }
 
@@ -300,7 +300,7 @@ module.exports = {
 
     // Build the replacement string.
     shortCode: function (varName) {
-        return '\'.' + this.varCode(varName) + '.\'';
+        return "'." + this.varCode(varName) + ".'";
     },
 
     // Creates a variable string from a variable name.
@@ -317,7 +317,7 @@ module.exports = {
     },
 
     addSlashes: function (str) {
-        return (str + '').replace(/'/g, "\\'").replace(/\\/g, '\\\\');
+        return (str + '').replace(/'/g, "\'").replace(/\\/g, '\\');
     },
 
     append: function () {
