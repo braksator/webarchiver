@@ -172,6 +172,23 @@ describe('#nextVarName', function () {
     it('should change 9000 ---> 9001', function () {
         expect(app.nextVarName('9000')).to.equal("9001");
     });
+    it('should change a9z ---> aa0', function () {
+        expect(app.nextVarName('a9z')).to.equal("aa0");
+    });
+    it('should change a9 ---> aa', function () {
+        expect(app.nextVarName('a9')).to.equal("aa");
+    });
+    it('should generate a hundred thousand unique vars', function () {
+        this.timeout(20000000);
+        var v = 'a';
+        var vars = [];
+        fs.writeFileSync('vars.txt', '');
+        for (var i = 0; i < 100000; i++) {
+            v = app.nextVarName(v);
+            assert.notInclude(vars, v);
+            vars.push(v);
+        }
+    });
 
 });
 

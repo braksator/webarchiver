@@ -454,27 +454,22 @@ module.exports = {
         var change_char = str[change];
         // Number of zeros to append when flipping.
         var zeros = 0;
-        // When the char to change is 9, simply make it a. Easy!
-        if (change_char == '9') {
-            str = str.substr(0, change) + 'a';
+        // Iterate backwards while there's a z (flipping).
+        while (change_char == 'z') {
+            // Increase the length of appended zeros
+            zeros++;
+            // Move the char to change back.
+            change_char = str[--change];
+        }
+        if (change_char == undefined) {
+            // Full flip - string increases in length.
+            str = 'a' + Array(str.length + 1).join("0");
         }
         else {
-            // Iterate backwards while there's a z (flipping).
-            while (change_char == 'z') {
-                // Increase the length of appended zeros
-                zeros++;
-                // Move the char to change back.
-                change_char = str[--change];
-            }
-            if (change_char == undefined) {
-                // Full flip - string increases in length.
-                str = 'a' + Array(str.length + 1).join("0");
-            }
-            else {
-                // Normal increment with partial flip handling.
-                str = str.substr(0, change)
-                    + String.fromCharCode(str.charCodeAt(change) + 1) + Array(zeros + 1).join('0');
-            }
+            // Normal increment with partial flip and 9->a handling.
+            str = str.substr(0, change)
+                + (change_char == '9' ? 'a' : String.fromCharCode(str.charCodeAt(change) + 1))
+                + Array(zeros + 1).join('0');
         }
         return str;
     },
