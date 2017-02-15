@@ -270,6 +270,8 @@ module.exports = {
                 }
                 bar.tick(1);
             }
+
+            // Update the progress bar to tick past the 'other' files that weren't iterated here.
             var remainder = j - long[j].occ.length - 1;
             if (remainder > 0) {
                 bar.tick(remainder);
