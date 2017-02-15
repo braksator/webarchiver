@@ -143,7 +143,22 @@ describe('#minify', function () {
 
     it('should handle a simple minification', function () {
         var html = "<b>Test</b>\n <p> A <em>paragraph</em> </p>\r\n\n    <style type=\"text/css\"> body { color: #ffffff; } </style>\n\n";
-        var result = app.minify(html);
+        var minify_opts = {
+            collapseBooleanAttributes: true,
+            collapseInlineTagWhitespace: true,
+            collapseWhitespace: true,
+            conservativeCollapse: false,
+            html5: false,
+            minifyCSS: true,
+            minifyJS: true,
+            removeAttributeQuotes: true,
+            removeComments: true,
+            removeEmptyAttributes: true,
+            removeRedundantAttributes: true,
+            removeScriptTypeAttributes: true,
+            removeStyleLinkTypeAttributes: true
+        };
+        var result = app.minify(html, {minify:minify_opts});
         expect(result).to.equal("<b>Test</b><p>A<em>paragraph</em></p><style>body{color:#fff}</style>");
     });
 

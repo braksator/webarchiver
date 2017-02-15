@@ -95,6 +95,37 @@ module.exports = {
             throw new Error("No input files found.");
         }
 
+        // Setup minify options.
+        if (options.minify !== false) {
+            var minify_opts = {
+                collapseBooleanAttributes: true,
+                collapseInlineTagWhitespace: true,
+                collapseWhitespace: true,
+                conservativeCollapse: false,
+                html5: false,
+                minifyCSS: true,
+                minifyJS: true,
+                removeAttributeQuotes: true,
+                removeComments: true,
+                removeEmptyAttributes: true,
+                removeRedundantAttributes: true,
+                removeScriptTypeAttributes: true,
+                removeStyleLinkTypeAttributes: true
+            };
+            options.minify = mergeOptions(minify_opts, options);
+        }
+
+        // Setup dedupe options.
+        if (options.dedupe !== false) {
+            var dedupe_opts = {
+                minLength: 10,
+                minSaving: 4,
+                startsWith: ['<', '{', '\\(', '\\[', '"'],
+                endsWith: ['>', '}', '\\)', '\\]', '"', '\\n', '\\s']
+            };
+            options.dedupe = mergeOptions(dedupe_opts, options);
+        }
+
         // Get the common prefix directories of all the files.
         var startPath = this.startPath(files);
 
@@ -168,6 +199,7 @@ module.exports = {
 
                         if (startPath + files[i] != outDir + files[i]) {
                             // Copy the file over.
+                            console.log(startPath + files[i]);
                             var file = fs.readFileSync(startPath + files[i], 'binary');
                             fs.writeFileSync(outDir + files[i], file, 'binary');
                         }
@@ -197,7 +229,7 @@ module.exports = {
                     if (!skipFiles[i]) {
                         // Minify the file contents.
                         if (pass == 0 && options.minify !== false) {
-                            str = this.minify(str);
+                            str = this.minify(str, options);
                         }
 
                         if (options.dedupe !== false) {
@@ -276,29 +308,36 @@ module.exports = {
 
         for (var j = 0; j < long.length; ++j) {
 
-            // Store the replacement.
-            replacements[varName[0]] = long[j].str;
+            // Use a function as a last chance to reject this match.
+            if (this.replacementAllowed(long[j], varName[0], options)) {
+                // Store the replacement.
+                replacements[varName[0]] = long[j].str;
 
-            var temp = str;
-            // Make the replacement in the current file.
-            str = this.replaceAll(str, long[j].str, this.shortCode(varName[0]));
+                var temp = str;
+                // Make the replacement in the current file.
+                str = this.replaceAll(str, long[j].str, this.shortCode(varName[0]));
 
-            bar.tick(1);
-
-            // Make the replacement in the other files.
-            for (var k in long[j].occ) {
-                if (k != currentFileIndex && long[j].occ.hasOwnProperty(k)) {
-                    var str2 = fs.readFileSync(outDir + files[k], 'utf8');
-
-                    if (!wrapped[this.base64Enc(files[k])]) {
-                        // Add wrap to file if it wasn't there.
-                        str2 = this.prepend(options.vfile, (files[k].match(/\//g) || []).length) + this.addSlashes(str2) + this.append();
-                        wrapped[this.base64Enc(files[k])] = true;
-                    }
-                    str2 = this.replaceAll(str2, long[j].str, this.shortCode(varName[0]));
-                    fs.writeFileSync(outDir + files[k], this.fixCodes(str2));
-                }
                 bar.tick(1);
+
+                // Make the replacement in the other files.
+                for (var k in long[j].occ) {
+                    if (k != currentFileIndex && long[j].occ.hasOwnProperty(k)) {
+                        var str2 = fs.readFileSync(outDir + files[k], 'utf8');
+
+                        if (!wrapped[this.base64Enc(files[k])]) {
+                            // Add wrap to file if it wasn't there.
+                            str2 = this.prepend(options.vfile, (files[k].match(/\//g) || []).length) + this.addSlashes(str2) + this.append();
+                            wrapped[this.base64Enc(files[k])] = true;
+                        }
+                        str2 = this.replaceAll(str2, long[j].str, this.shortCode(varName[0]));
+                        fs.writeFileSync(outDir + files[k], this.fixCodes(str2));
+                    }
+                    bar.tick(1);
+                }
+
+                // varName has been spent, so update to another one.
+                varName[0] = this.nextVarName(varName[0]);
+
             }
 
             // Update the progress bar to tick past the 'other' files that weren't iterated here.
@@ -307,10 +346,20 @@ module.exports = {
                 bar.tick(remainder);
             }
 
-            // varName has been spent, so update to another one.
-            varName[0] = this.nextVarName(varName[0]);
         }
         return str;
+    },
+
+    /**
+     * Determines whether to allow the current duplicate to be replaced in files.
+     *
+     * @param duplicate Object containing information about the deduplication match.
+     * @param varName The name of the var that will be used in the replacement ('.${varName}.').
+     * @param options The options object.
+     * @returns {boolean}
+     */
+    replacementAllowed: function(duplicate, varName, options) {
+        return duplicate.str.length - 5 - varName.length >= options.dedupe.minSaving;
     },
 
     // Clean up a string with replacements in it.
@@ -379,15 +428,14 @@ module.exports = {
 
     // Find duplicates function.
     findDuplicates: function (str, outDir, files, currentFileIndex, options, skipFiles, wrapped) {
-        var opts = {
-            minLength: 20,
-            startsWith: ['<', '{', '\\(', '\\[', '"'],
-            endsWith: ['>', '}', '\\)', '\\]', '"', '\\n', '\\s']
-        };
-        opts = mergeOptions(opts, options);
-
         var long = [];
-        var re = new RegExp("([" + opts.startsWith.join('') + "]?[^" + opts.startsWith.join('') + "" + opts.endsWith.join('') + "]*[" + opts.endsWith.join('') + "]?){1}", "g");
+        var opts = options.dedupe;
+        var re = new RegExp("(["
+            + opts.startsWith.join('')
+            + "]?[^" + opts.startsWith.join('')
+            + "" + opts.endsWith.join('') + "]*["
+            + opts.endsWith.join('')
+            + "]?){1}", "g");
 
         var a = this.unwrap(str, files, currentFileIndex, options, wrapped).split(re).filter(Boolean);
 
@@ -534,23 +582,7 @@ module.exports = {
 
     // Minify function.
     minify: function (input, options) {
-        var opts = {
-            collapseBooleanAttributes: true,
-            collapseInlineTagWhitespace: true,
-            collapseWhitespace: true,
-            conservativeCollapse: false,
-            html5: false,
-            minifyCSS: true,
-            minifyJS: true,
-            removeAttributeQuotes: true,
-            removeComments: true,
-            removeEmptyAttributes: true,
-            removeRedundantAttributes: true,
-            removeScriptTypeAttributes: true,
-            removeStyleLinkTypeAttributes: true
-        };
-
-        return minify(input, mergeOptions(opts, options));
+        return minify(input, options.minify);
     }
 
 };

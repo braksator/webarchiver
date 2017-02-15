@@ -43,9 +43,12 @@ will be written.
 
 Now type `node index.js` and let it go to work.
 
-This module exports all of its functions so you can potentially overwrite some parts of it!  All the functions are
-parameterized so you can use a subset of the functions with minimal stubbing - if you just want the deduplicator you'll
-probably want the `fragments` function and look at how it is used by `findDuplicates`.
+This module exports all of its functions so you can potentially overwrite some parts of it! Some interesting ones are
+`replacementAllowed` which lets you reject a deduplication match, and `varCode` which can alter the variable name used
+in the PHP output, `prepend` and `append` to modify the start and end of each file (though altering the php file would
+probably be better). All the functions are parameterized so you can use a subset of the functions with minimal stubbing
+- if you just want the deduplicator you'll probably want the `fragments` function and look at how it is used by
+`findDuplicates`.
 
 It takes about half a day to do a pass of a gig of data on an average machine, just to ballpark it for you, YMMV.
 
@@ -89,11 +92,13 @@ Replacements are performed in the string by substituting portions of duplicated 
 the vars are automatically generated to be as short as possible.  Therefore each file has some overhead (28 chars), each
 replacement instance has some overhead (6+ chars), and the storage of the original text has some overhead too.
 
-Due to the overhead it is advisable to not choose a particularly small value for (**options.dedupe.minLength**).
+Due to the overhead it is advisable to not choose a particularly small value for **options.dedupe.minLength** and
+**options.dedupe.minSaving**.  The defaults are about as small as they should be.
 
 | Option name       | Type          | Description                                                               | Default                                       |
 | ---               | ---           | ---                                                                       |---                                            |
-| minLength         | int           | The minimum length a string of text must be to deduplicate it.            | 20                                            |
+| minLength         | int           | The minimum length a string of text must be to deduplicate it.            | 10                                            |
+| minSaving         | int           | The minimum length of string minus the replacement instance overhead      | 4                                             |
 | startsWith        | char[]        | Regex escaped chars that a fragment can start with.                       | ['<', '{', '\\(', '\\[', '"']                 |
 | endsWith          | char[]        | Regex escaped chars that a fragment can end with.                         | ['>', '}', '\\)', '\\]', '"', '\\n', '\\s']   |
 
