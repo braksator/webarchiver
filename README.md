@@ -41,6 +41,8 @@ wa.webArchiver({
 Where 'website' is the directory containing your files and 'archived' is the non-existent directory where the archive
 will be written.
 
+Now type `node index.js` and let it go to work.
+
 This module exports all of its functions so you can potentially overwrite some parts of it too!
 
 It takes about half a day to process a gig of data on an average machine, just to ballpark it for you, YMMV.
