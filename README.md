@@ -40,7 +40,7 @@ wa.webArchiver({
 ```
 Where 'website' is the directory containing your files and 'archived' is where they will be written.
 
-This module exports all of it's functions so you can potentially overwrite some parts of it too!
+This module exports all of its functions so you can potentially overwrite some parts of it too!
 
 
 ## Options
