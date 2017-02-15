@@ -43,7 +43,9 @@ will be written.
 
 Now type `node index.js` and let it go to work.
 
-This module exports all of its functions so you can potentially overwrite some parts of it too!
+This module exports all of its functions so you can potentially overwrite some parts of it!  All the functions are
+parameterized so you can use a subset of the functions with minimal stubbing - if you just want the deduplicator you'll
+probably want the `fragments` function.
 
 It takes about half a day to process a gig of data on an average machine, just to ballpark it for you, YMMV.
 
