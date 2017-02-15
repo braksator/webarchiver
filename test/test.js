@@ -182,7 +182,6 @@ describe('#nextVarName', function () {
         this.timeout(20000000);
         var v = 'a';
         var vars = [];
-        fs.writeFileSync('vars.txt', '');
         for (var i = 0; i < 100000; i++) {
             v = app.nextVarName(v);
             assert.notInclude(vars, v);
