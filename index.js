@@ -28,6 +28,7 @@ module.exports = {
      * @param (int|bool) options.cache = The size of the memory cache in terms of key-values, true for unlimited, false for none.  Defaults to 500.
      * @param {bool|undefined} options.keepdb - Whether to keep the key-file storage after completion, useful for batching.  Default is undefined.
      * @param {array} options.skipcontaining - An array of strings, if a text file contains any of them it will be 'just copied'. Default is ['<?'].
+     * @param {bool} options.noprogress - Set to true to remove the progress bar.
      */
     webArchiver: function (options) {
 
@@ -109,10 +110,16 @@ module.exports = {
         var numFiles = files.length;
 
         // Set up progress bar.
-        var bar = new ProgressBar('  processing [:bar] :percent :etas', {
-            width: 100,
-            total: (numFiles * (numFiles + 1)) / 2
-        });
+        if (options.noprogress) {
+
+            var bar = new ProgressBar('  processing [:bar] :percent :etas', {
+                width: 100,
+                total: (numFiles * (numFiles + 1)) / 2
+            });
+        }
+        else {
+            var bar = { tick: function() {} };
+        }
 
         // Length of the start path.
         var startPathLength = startPath.length;

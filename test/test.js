@@ -501,7 +501,8 @@ describe('#webArchiver', function () {
 
         var options = {
             files: ["test/testdata/binary/*"],
-            output: dir
+            output: dir,
+            noprogress: true
         };
 
         // Act
