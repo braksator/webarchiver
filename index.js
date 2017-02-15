@@ -220,16 +220,6 @@ module.exports = {
                             // Deduplicate within this file and with previous files.
                             var long = this.findDuplicates(str, outDir, files, i, options, skipFiles, wrapped);
 
-                            if (long.length > 0 && pass > 0) {
-                                console.log("got "+ long.length +" new matches on pass "+(pass+1));
-                                if (pass > 1) {
-                                    for (var out = 0; out < long.length; ++out ) {
-
-                                        console.log("\t" + long[out].str);
-                                    }
-                                }
-                            }
-
                             if (long.length > 0) {
                                 // Apply the deduplication replacements.
                                 str = this.applyReplacements(str, long, numFiles, files, i, startPath, outDir, varName, wrapped, replacements, options, bar);
