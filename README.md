@@ -43,6 +43,7 @@ will be written.
 
 This module exports all of its functions so you can potentially overwrite some parts of it too!
 
+It takes about half a day to process a gig of data on an average machine, just to ballpark it for you, YMMV.
 
 ## Options
 
@@ -91,7 +92,7 @@ Due to the overhead it is advisable to not choose a particularly small value for
 | startsWith        | char[]        | Regex escaped chars that a fragment can start with.                       | ['<', '{', '\\(', '\\[', '"']                 |
 | endsWith          | char[]        | Regex escaped chars that a fragment can end with.                         | ['>', '}', '\\)', '\\]', '"', '\\n', '\\s']   |
 
-Warning: Don't add . or $ or ' into startsWith/endsWith.
+Warning: Don't add . or $ or ' or alphanumeric chars into startsWith/endsWith.
 
 You may override some or all of these options at **options.dedupe**, your options will be merged into the defaults.
 You can set **options.dedupe** to false to disable deduplication.
