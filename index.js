@@ -341,8 +341,8 @@ module.exports = {
         var paths = strings.concat().sort(), j = 0, pathShort = paths[j], pathLong = paths[paths.length - 1], i = 0;
         // Skip dirs at beginning of array.
         while (fs.lstatSync(pathShort).isDirectory()) pathShort = paths[++j];
-        var L = pathShort.length;
-        while (i < L && pathShort.charAt(i) === pathLong.charAt(i)) i++;
+        var pathShortLength = pathShort.length;
+        while (i < pathShortLength && pathShort.charAt(i) === pathLong.charAt(i)) i++;
         var sharedStart = pathShort.substring(0, i);
         // Omit chars after the final forward-slash.
         if (sharedStart.indexOf("/") > -1) sharedStart = sharedStart.substr(0, 1 + sharedStart.lastIndexOf("/"));
