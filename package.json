@@ -12,7 +12,7 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/braksator/webarchiver.git"
-  }
+  },
   "dependencies": {
     "del": "^2.2.2",
     "globby": "^6.1.0",
