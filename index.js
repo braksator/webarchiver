@@ -99,7 +99,7 @@ module.exports = {
         this.processFiles(files, justCopy, startPath, outDir, options);
 
         if (!options.keepdb) {
-            //del.sync(outDir + options.dbdir);
+            del.sync(outDir + options.dbdir);
         }
     },
 
@@ -212,23 +212,6 @@ module.exports = {
                             str = this.applyReplacements(str, long, numFiles, files, i, startPath, outDir, varName, wrapped, replacements, options, bar);
                         }
 
-                        // Output the PHP vfile.
-                        var vfile = '<?php ';
-                        try {
-                            replacements_keys = fs.readdirSync(replacements_dir);
-                        }
-                        catch (err) {
-                            if (err.code !== 'ENOENT') {
-                                /* istanbul ignore next */
-                                throw err;
-                            }
-                        }
-                        for (var k = 0; k < replacements_keys.length; ++k) {
-                            var r = replacements[replacements_keys[k]];
-                            str = this.replaceAll(str, r, this.shortCode(replacements_keys[k]));
-                            vfile += this.varCode(replacements_keys[k]) + '=\'' + this.addSlashes(r) + '\';';
-                        }
-                        fs.writeFileSync(outDir + options.vfile, vfile);
                     }
                     else {
                         bar.tick(i + 1);
@@ -243,6 +226,25 @@ module.exports = {
                 fs.writeFileSync(outDir + files[i], this.fixCodes(str));
             }
 
+        }
+
+        // Output the PHP vfile.
+        var vfile = '<?php ';
+        try {
+            replacements_keys = fs.readdirSync(replacements_dir);
+        }
+        catch (err) {
+            if (err.code !== 'ENOENT') {
+                /* istanbul ignore next */
+                throw err;
+            }
+        }
+        if (replacements_keys.length > 0) {
+            for (var k = 0; k < replacements_keys.length; ++k) {
+                var r = replacements[replacements_keys[k]];
+                vfile += this.varCode(replacements_keys[k]) + '=\'' + this.addSlashes(r) + '\';';
+            }
+            fs.writeFileSync(outDir + options.vfile, this.fixCodes(vfile));
         }
 
     },
