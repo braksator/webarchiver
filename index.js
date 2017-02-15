@@ -29,6 +29,7 @@ module.exports = {
      * @param {bool|undefined} options.keepdb - Whether to keep the key-file storage after completion, useful for batching.  Default is undefined.
      * @param {array} options.skipcontaining - An array of strings, if a text file contains any of them it will be 'just copied'. Default is ['<?'].
      * @param {bool} options.noprogress - Set to true to remove the progress bar.
+     * @param {bool} options.passes - Number of deduplication passes over the files.  Defaults to 2.
      */
     webArchiver: function (options) {
 
@@ -65,6 +66,11 @@ module.exports = {
         // Set the kfs cache file size.
         if (!options.cache) {
             options.cache = 500;
+        }
+
+        // Set the number of passes
+        if (!options.passes) {
+            options.passes = 2;
         }
 
         // Grab the files.
@@ -115,7 +121,8 @@ module.exports = {
 
             var bar = new ProgressBar('  processing [:bar] :percent :etas', {
                 width: 100,
-                total: ((numFiles * (numFiles + 1)) / 2) + 1 // This is a 1+2+3+4.. algorithm plus one extra tick.
+                // This is a 1+2+3+4.. algorithm *passes plus one extra tick for writing the vfile.
+                total: ((numFiles * (numFiles + 1)) / 2) * options.passes + 1
             });
         }
         else {
@@ -137,94 +144,111 @@ module.exports = {
 
         var skipFiles = {};
 
-        for (var i = 0; i < numFiles; ++i) {
-            // Determine if this file shouldn't be processed.
-            skipFiles[i] = justCopy.indexOf(files[i]) > -1;
+        for (var pass = 0; pass < options.passes; ++pass) {
 
-            // Remove old start path from the filename.
-            files[i] = files[i].substr(startPathLength);
+            for (var i = 0; i < numFiles; ++i) {
+                if (pass == 0) {
+                    // Determine if this file shouldn't be processed.
+                    skipFiles[i] = justCopy.indexOf(files[i]) > -1;
 
-            if (!skipFiles[i] && fs.lstatSync(startPath + files[i]).isDirectory()) {
-                // Remove directories and skip the rest of the loop.
-                files.splice(i--, 1);
-                numFiles--;
-                bar.tick(i + 1);
-                continue;
-            }
-            else if (isBinaryFile.sync(startPath + files[i])) {
-                // Process binary files.
-
-                // Ensure the output dir exists.
-                mkdirp.sync(path.dirname(outDir + files[i]));
-
-                if (startPath + files[i] != outDir + files[i]) {
-                    // Copy the file over.
-                    var file = fs.readFileSync(startPath + files[i], 'binary');
-                    fs.writeFileSync(outDir + files[i], file, 'binary');
+                    // Remove old start path from the filename.
+                    files[i] = files[i].substr(startPathLength);
                 }
 
-                bar.tick(i + 1);
-            }
-            else {
-                // Process text files.
-
-                // Read the file contents.
-                var str = fs.readFileSync(startPath + files[i], 'utf8');
-
-                // Determine additional skip conditions based on the contents of the file.
-                if (!skipFiles[i]) {
-                    for (var j = 0; j < options.skipcontaining.length; ++j) {
-                        if (str.indexOf(options.skipcontaining[j]) > -1) {
-                            skipFiles[i] = true;
-                            break;
-                        }
-                    }
+                if (fs.lstatSync(startPath + files[i]).isDirectory()) {
+                    // Directory.
+                    skipFiles[i] = true;
+                    bar.tick(i + options.passes);
                 }
+                else if (!skipFiles[i] && isBinaryFile.sync(startPath + files[i])) {
+                    // Process binary files.
+                    if (pass == 0) {
+                        // Ensure the output dir exists.
+                        mkdirp.sync(path.dirname(outDir + files[i]));
 
-                // Skip files that potentially contain PHP code.
-                if (!skipFiles[i]) {
-                    // Minify the file contents.
-                    if (options.minify !== false) {
-                        str = this.minify(str);
+                        if (startPath + files[i] != outDir + files[i]) {
+                            // Copy the file over.
+                            var file = fs.readFileSync(startPath + files[i], 'binary');
+                            fs.writeFileSync(outDir + files[i], file, 'binary');
+                        }
                     }
 
-                    if (options.dedupe !== false) {
-                        // Apply existing replacements.
-                        try {
-                            replacements_keys = fs.readdirSync(replacements_dir);
-                        }
-                        catch (err) {
-                            if (err.code !== 'ENOENT') {
-                                /* istanbul ignore next */
-                                throw err;
+                    skipFiles[i] = true;
+                    bar.tick(i + options.passes);
+                }
+                else {
+                    // Process text files.
+
+                    // Read the file contents.
+                    var fileLoc = (pass == 0 ? startPath + files[i] : outDir + files[i]);
+                    var str = fs.readFileSync(fileLoc, 'utf8');
+
+                    // Determine additional skip conditions based on the contents of the file.
+                    if (pass == 0 && !skipFiles[i]) {
+                        for (var j = 0; j < options.skipcontaining.length; ++j) {
+                            if (str.indexOf(options.skipcontaining[j]) > -1) {
+                                skipFiles[i] = true;
+                                break;
                             }
                         }
+                    }
 
-                        for (var k = 0; k < replacements_keys.length; ++k) {
-                            var r = replacements[replacements_keys[k]];
-                            str = this.replaceAll(str, r, this.shortCode(replacements_keys[k]));
+                    // Ensure it's not a file to skip.
+                    if (!skipFiles[i]) {
+                        // Minify the file contents.
+                        if (pass == 0 && options.minify !== false) {
+                            str = this.minify(str);
                         }
 
-                        // Deduplicate within this file and with previous files.
-                        var long = this.findDuplicates(str, outDir, files, i, options, skipFiles);
+                        if (options.dedupe !== false) {
+                            // Apply existing replacements.
+                            try {
+                                replacements_keys = fs.readdirSync(replacements_dir);
+                            }
+                            catch (err) {
+                                if (err.code !== 'ENOENT') {
+                                    /* istanbul ignore next */
+                                    throw err;
+                                }
+                            }
 
-                        if (long.length > 0) {
-                            // Apply the deduplication replacements.
-                            str = this.applyReplacements(str, long, numFiles, files, i, startPath, outDir, varName, wrapped, replacements, options, bar);
+                            for (var k = 0; k < replacements_keys.length; ++k) {
+                                var r = replacements[replacements_keys[k]];
+                                str = this.replaceAll(str, r, this.shortCode(replacements_keys[k]));
+                            }
+
+                            // Deduplicate within this file and with previous files.
+                            var long = this.findDuplicates(str, outDir, files, i, options, skipFiles, wrapped);
+
+                            if (long.length > 0 && pass > 0) {
+                                console.log("got "+ long.length +" new matches on pass "+(pass+1));
+                                if (pass > 1) {
+                                    for (var out = 0; out < long.length; ++out ) {
+
+                                        console.log("\t" + long[out].str);
+                                    }
+                                }
+                            }
+
+                            if (long.length > 0) {
+                                // Apply the deduplication replacements.
+                                str = this.applyReplacements(str, long, numFiles, files, i, startPath, outDir, varName, wrapped, replacements, options, bar);
+                            }
+
                         }
-
+                        else {
+                            bar.tick(i + 1);
+                        }
                     }
                     else {
                         bar.tick(i + 1);
                     }
-                }
-                else {
-                    bar.tick(i + 1);
+
+                    // Write the current text file.
+                    mkdirp.sync(path.dirname(outDir + files[i]));
+                    fs.writeFileSync(outDir + files[i], this.fixCodes(str));
                 }
 
-                // Write the current text file.
-                mkdirp.sync(path.dirname(outDir + files[i]));
-                fs.writeFileSync(outDir + files[i], this.fixCodes(str));
             }
 
         }
@@ -254,16 +278,19 @@ module.exports = {
 
     // Apply replacements.
     applyReplacements: function (str, long, numFiles, files, currentFileIndex, startPath, outDir, varName, wrapped, replacements, options, bar) {
-        // Add wrap to current file.
-        str = this.prepend(options.vfile, (files[currentFileIndex].match(/\//g) || []).length) + this.addSlashes(str) + this.append();
-        wrapped[this.base64Enc(files[currentFileIndex])] = true;
+        if (!wrapped[this.base64Enc(files[currentFileIndex])]) {
+            // Add wrap to current file.
+            str = this.prepend(options.vfile, (files[currentFileIndex].match(/\//g) || []).length) + this.addSlashes(str) + this.append();
+            wrapped[this.base64Enc(files[currentFileIndex])] = true;
+        }
 
         for (var j = 0; j < long.length; ++j) {
 
             // Store the replacement.
             replacements[varName[0]] = long[j].str;
 
-            // Make the replacecment in the current file.
+            var temp = str;
+            // Make the replacement in the current file.
             str = this.replaceAll(str, long[j].str, this.shortCode(varName[0]));
 
             bar.tick(1);
@@ -272,6 +299,7 @@ module.exports = {
             for (var k in long[j].occ) {
                 if (k != currentFileIndex && long[j].occ.hasOwnProperty(k)) {
                     var str2 = fs.readFileSync(outDir + files[k], 'utf8');
+
                     if (!wrapped[this.base64Enc(files[k])]) {
                         // Add wrap to file if it wasn't there.
                         str2 = this.prepend(options.vfile, (files[k].match(/\//g) || []).length) + this.addSlashes(str2) + this.append();
@@ -342,8 +370,8 @@ module.exports = {
     startPath: function (strings) {
         // Sorts the strings and compares common starting substring of first and last string.
         var paths = strings.concat().sort(), j = 0, pathShort = paths[j], pathLong = paths[paths.length - 1], i = 0;
-        // Skip dirs at beginning of array.
-        while (fs.lstatSync(pathShort).isDirectory()) pathShort = paths[++j];
+        // Skip one-level dirs at beginning of array.
+        while (pathShort.indexOf('.') == -1 && pathShort.indexOf('/') == -1) pathShort = paths[++j];
         var pathShortLength = pathShort.length;
         while (i < pathShortLength && pathShort.charAt(i) === pathLong.charAt(i)) i++;
         var sharedStart = pathShort.substring(0, i);
@@ -360,7 +388,7 @@ module.exports = {
     },
 
     // Find duplicates function.
-    findDuplicates: function (str, outDir, files, currentFileIndex, options, skipFiles) {
+    findDuplicates: function (str, outDir, files, currentFileIndex, options, skipFiles, wrapped) {
         var opts = {
             minLength: 20,
             startsWith: ['<', '{', '\\(', '\\[', '"'],
@@ -371,17 +399,33 @@ module.exports = {
         var long = [];
         var re = new RegExp("([" + opts.startsWith.join('') + "]?[^" + opts.startsWith.join('') + "" + opts.endsWith.join('') + "]*[" + opts.endsWith.join('') + "]?){1}", "g");
 
-        var a = str.split(re).filter(Boolean);
+        var a = this.unwrap(str, files, currentFileIndex, options, wrapped).split(re).filter(Boolean);
 
         for (var i = currentFileIndex; i >= 0; --i) {
             if (!skipFiles[i]) {
-                var str2 = i == currentFileIndex ? str : fs.readFileSync(outDir + files[i], 'utf8');
-                var b = str2.split(re).filter(Boolean);
+                var b;
+                if (i == currentFileIndex) {
+                    b = a;
+                }
+                else {
+                    var str2 = fs.readFileSync(outDir + files[i], 'utf8');
+                    b = str2.split(re).filter(Boolean);
+                }
                 this.fragments(long, a, b, currentFileIndex, i, opts.minLength);
             }
         }
 
         return long;
+    },
+
+    unwrap: function(str, files, fileIndex, options, wrapped) {
+        if (wrapped[this.base64Enc(files[fileIndex])]) {
+            var prepend = this.prepend(options.vfile, (files[fileIndex].match(/\//g) || []).length);
+            var append = this.append();
+            str = str.slice(prepend.length, -append.length);
+        }
+
+        return str;
     },
 
     /**

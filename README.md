@@ -64,6 +64,7 @@ You may override some or all of these options.
 | keepdb            | bool          | Whether to keep the key-file storage after completion, useful for batching.                                               | false         |
 | skipcontaining    | bool          | An array of strings, if a text file contains any of them it will be 'just copied'.                                        | ['<?']        |
 | noprogress        | bool          | Set to true to disable the progress bar.                                                                                  | false         |
+| passes            | int           | Number of deduplication passes.  Often things are missed on first pass.  Can increase for extra dedupe checks.            | 2             |
 
 
 ## Dedupe options

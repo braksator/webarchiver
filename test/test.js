@@ -178,11 +178,11 @@ describe('#nextVarName', function () {
     it('should change a9 ---> aa', function () {
         expect(app.nextVarName('a9')).to.equal("aa");
     });
-    it('should generate a hundred thousand unique vars', function () {
-        this.timeout(20000000);
+    it('should generate ten thousand unique vars', function () {
+        this.timeout(20000);
         var v = 'a';
         var vars = [];
-        for (var i = 0; i < 100000; i++) {
+        for (var i = 0; i < 10000; i++) {
             v = app.nextVarName(v);
             assert.notInclude(vars, v);
             vars.push(v);
@@ -266,6 +266,7 @@ describe('#webArchiver', function () {
         var options = {
             files: "test/testdata/single.html",
             output: dir,
+            noprogress: true,
             dedupe: false
         };
 
@@ -299,6 +300,7 @@ describe('#webArchiver', function () {
         var options = {
             files: "test/testdata/single.html",
             output: dir,
+            noprogress: true,
             minify: false
         };
 
@@ -336,6 +338,7 @@ describe('#webArchiver', function () {
         var options = {
             files: "test/testdata/single.html",
             output: dir,
+            noprogress: true,
             minify: false,
             dedupe: false
         };
@@ -374,6 +377,7 @@ describe('#webArchiver', function () {
 
         var options = {
             files: "test/testdata/double*",
+            noprogress: true,
             output: dir
         };
 
@@ -401,7 +405,9 @@ describe('#webArchiver', function () {
         // Act
         var options = {
             files: ["test/testdata/multiple*"],
-            output: dir
+            output: dir,
+            passes: 5,
+            noprogress: true
         };
 
         var result = app.webArchiver(options);
@@ -427,7 +433,8 @@ describe('#webArchiver', function () {
 
         var options = {
             files: "test/testdata/skip.php",
-            output: dir
+            output: dir,
+            noprogress: true
         };
 
         // Act
@@ -457,7 +464,8 @@ describe('#webArchiver', function () {
 
         var options = {
             files: ["test/testdata/nested", "test/testdata/nested/nested.html", "test/testdata/unnested.html"],
-            output: dir
+            output: dir,
+            noprogress: true
         };
 
         // Act
@@ -487,7 +495,8 @@ describe('#webArchiver', function () {
         var options = {
             files: ["test/testdata/justcopy.html"],
             justcopy: ["test/testdata/justcopy.html"],
-            output: dir
+            output: dir,
+            noprogress: true
         };
 
         // Act
