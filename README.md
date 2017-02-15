@@ -38,7 +38,8 @@ wa.webArchiver({
     output: "archived"
 });
 ```
-Where 'website' is the directory containing your files and 'archived' is where they will be written.
+Where 'website' is the directory containing your files and 'archived' is the non-existent directory where the archive
+will be written.
 
 This module exports all of its functions so you can potentially overwrite some parts of it too!
 
