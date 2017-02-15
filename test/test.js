@@ -206,6 +206,7 @@ describe('#webArchiver', function () {
     });
 
     it('should archive a single file to new directory', function () {
+        // Arrange
         this.timeout(20000);
         var dir = "test/output/single";
 
@@ -218,11 +219,135 @@ describe('#webArchiver', function () {
             output: dir
         };
 
+        // Act
         var result = app.webArchiver(options);
+
+        // Assert
+
+        // Does the output directory exist now?
         assert.isDirectory(dir, "Is Directory");
+
+        // Does the output differ from the input?
+        var buf1 = fs.readFileSync('./test/output/single/single.html');
+        var buf2 = fs.readFileSync('./test/testdata/single.html');
+        expect(buf1.toString()).to.not.equal(buf2.toString());
+
+        // Does the output contain PHP replacements?
+        expect(buf1.toString()).to.include("<?php");
+        expect(buf1.toString()).to.include("'.$");
+    });
+
+
+    it('should archive a single file to new directory without deduplication', function () {
+        // Arrange
+        this.timeout(20000);
+        var dir = "test/output/single-nodedupe";
+
+        // First delete the dir and confirm it isn't there.
+        del.sync(dir);
+        expect(dir).to.not.be.a.path();
+
+        var options = {
+            files: "test/testdata/single.html",
+            output: dir,
+            dedupe: false
+        };
+
+        // Act
+        var result = app.webArchiver(options);
+
+        // Assert
+
+        // Does the output directory exist now?
+        assert.isDirectory(dir, "Is Directory");
+
+        // Does the output contain PHP replacements?
+        var buf = fs.readFileSync('./test/output/single-nodedupe/single.html');
+        expect(buf.toString()).to.not.include("<?php");
+        expect(buf.toString()).to.not.include("'.$");
+
+        // Does the output differ from the output of a test without this condition?
+        var buf3 = fs.readFileSync('./test/output/single/single.html');
+        expect(buf.toString()).to.not.equal(buf3.toString());
+    });
+
+    it('should archive a single file to new directory without minification', function () {
+        // Arrange
+        this.timeout(20000);
+        var dir = "test/output/single-nominify";
+
+        // First delete the dir and confirm it isn't there.
+        del.sync(dir);
+        expect(dir).to.not.be.a.path();
+
+        var options = {
+            files: "test/testdata/single.html",
+            output: dir,
+            minify: false
+        };
+
+        // Act
+        var result = app.webArchiver(options);
+
+        // Assert
+
+        // Does the output directory exist now?
+        assert.isDirectory(dir, "Is Directory");
+
+        // Does the output differ from the input?
+        var buf1 = fs.readFileSync('./test/output/single-nominify/single.html');
+        var buf2 = fs.readFileSync('./test/testdata/single.html');
+        expect(buf1.toString()).to.not.equal(buf2.toString());
+
+        // Does the output contain PHP replacements?
+        expect(buf1.toString()).to.include("<?php");
+        expect(buf1.toString()).to.include("'.$");
+
+        // Does the output differ from the output of a test without this condition?
+        var buf3 = fs.readFileSync('./test/output/single/single.html');
+        expect(buf1.toString()).to.not.equal(buf3.toString());
+    });
+
+    it('should archive a single file to new directory without minification or deduplication', function () {
+        // Arrange
+        this.timeout(20000);
+        var dir = "test/output/single-nothing";
+
+        // First delete the dir and confirm it isn't there.
+        del.sync(dir);
+        expect(dir).to.not.be.a.path();
+
+        var options = {
+            files: "test/testdata/single.html",
+            output: dir,
+            minify: false,
+            dedupe: false
+        };
+
+        // Act
+        var result = app.webArchiver(options);
+
+        // Assert
+
+        // Does the output directory exist now?
+        assert.isDirectory(dir, "Is Directory");
+
+        // Does the output match the input?
+        var buf1 = fs.readFileSync('./test/output/single-nothing/single.html');
+        var buf2 = fs.readFileSync('./test/testdata/single.html');
+        expect(buf1.toString()).to.equal(buf2.toString());
+
+        // Does the output not contain PHP replacements?
+        expect(buf1.toString()).to.not.include("<?php");
+        expect(buf1.toString()).to.not.include("'.$");
+
+        // Does the output differ from the output of a test without this condition?
+        var buf3 = fs.readFileSync('./test/output/single/single.html');
+        expect(buf1.toString()).to.not.equal(buf3.toString());
     });
 
     it('should archive two files to new directory', function () {
+        // Arrange
         this.timeout(20000);
 
         var dir = "test/output/double";
@@ -233,15 +358,22 @@ describe('#webArchiver', function () {
 
         var options = {
             files: "test/testdata/double*",
-            output: dir,
-            //dedupe: false
+            output: dir
         };
 
+        // Act
         var result = app.webArchiver(options);
+
+        // Assert
+
+        // Does the output directory exist now?
         assert.isDirectory(dir, "Is Directory");
+
+        // Unsure how to assert further...
     });
 
     it('should archive multiple files to new directory', function () {
+        // Arrange
         this.timeout(40000);
 
         var dir = "test/output/multiple";
@@ -250,17 +382,25 @@ describe('#webArchiver', function () {
         del.sync(dir);
         expect(dir).to.not.be.a.path();
 
+        // Act
         var options = {
-            files: "test/testdata/multiple*",
+            files: ["test/testdata/multiple*"],
             output: dir
         };
 
         var result = app.webArchiver(options);
+
+        // Assert
+
+        // Does the output directory exist now?
         assert.isDirectory(dir, "Is Directory");
+
+        // Unsure how to assert further...
     });
 
 
     it('should skip PHP files', function () {
+        // Arrange
         this.timeout(20000);
 
         var dir = "test/output/skip";
@@ -274,9 +414,15 @@ describe('#webArchiver', function () {
             output: dir
         };
 
+        // Act
         var result = app.webArchiver(options);
+
+        // Assert
+
+        // Does the output directory exist now?
         assert.isDirectory(dir, "Is Directory");
 
+        // Does the output match the input?
         var buf1 = fs.readFileSync(dir + '/skip.php');
         var buf2 = fs.readFileSync('./test/testdata/skip.php');
         expect(buf1.toString()).to.equal(buf2.toString());
@@ -284,6 +430,7 @@ describe('#webArchiver', function () {
 
 
     it('should archive nested file', function () {
+        // Arrange
         this.timeout(20000);
 
         var dir = "test/output/nested";
@@ -297,15 +444,22 @@ describe('#webArchiver', function () {
             output: dir
         };
 
+        // Act
         var result = app.webArchiver(options);
+
+        // Assert
+
+        // Does the output directory exist now?
         assert.isDirectory(dir, "Is Directory");
 
+        // Does the include in the file have the relative directory dots?
         var buf1 = fs.readFileSync(dir + '/nested/nested.html');
         assert.include(buf1.toString(), "include '../v.php';", '');
     });
 
 
     it('should just copy file', function () {
+        // Arrange
         this.timeout(20000);
 
         var dir = "test/output/justcopy";
@@ -320,9 +474,15 @@ describe('#webArchiver', function () {
             output: dir
         };
 
+        // Act
         var result = app.webArchiver(options);
+
+        // Assert
+
+        // Does the output directory exist now?
         assert.isDirectory(dir, "Is Directory");
 
+        // Is the output the same as the input?
         var buf1 = fs.readFileSync(dir + '/justcopy.html');
         var buf2 = fs.readFileSync('./test/testdata/justcopy.html');
         assert.include(buf1.toString(), buf2.toString(), '');
@@ -330,6 +490,7 @@ describe('#webArchiver', function () {
 
 
     it('should handle binary files properly', function (done) {
+        // Arrange
         this.timeout(20000);
 
         var dir = "test/output/binary";
@@ -343,9 +504,15 @@ describe('#webArchiver', function () {
             output: dir
         };
 
+        // Act
         var result = app.webArchiver(options);
+
+        // Assert
+
+        // Does the output directory exist now?
         assert.isDirectory(dir, "Is Directory");
 
+        // Were the files created?
         setTimeout(function () {
             expect(dir + "/lena_std.jpg").to.be.a.path();
             expect(dir + "/sample.bin").to.be.a.path();

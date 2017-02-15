@@ -272,7 +272,7 @@ module.exports = {
             }
             var remainder = j - long[j].occ.length - 1;
             if (remainder > 0) {
-                bar.tick(remaining);
+                bar.tick(remainder);
             }
 
             // varName has been spent, so update to another one.
