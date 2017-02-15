@@ -20,7 +20,7 @@ module.exports = {
      * @param {string|array} options.justcopy - Glob string/array of files to not process.
      * @param {undefined|null|bool} options.inplace - If set to true will modify the existing files rather than creating new files.
      * @param {string} options.output - The path of an output directory if options.inplace is not used.
-     * @param {object|false} options.dedupe - Options to override deduplication behaviour as per the common-substrings package (or set to false to not deduplicate).
+     * @param {object|false} options.dedupe - Options to override deduplication behaviour (or set to false to not deduplicate).
      * @param {object|false} options.minify - Options to override minification behaviour as per the html-minifier package (or set to false to not minify).
      * @param {string} options.vfile - The name of the php variables file if 'v.php' is not acceptable.
      * @param {string} options.dbdir - The name of the key-file storage directory if 'vdb' is not acceptable.
