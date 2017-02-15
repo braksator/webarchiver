@@ -335,14 +335,17 @@ module.exports = {
         return "';";
     },
 
-    // Get common start of an array of strings.
+    // Get common start of an array of paths.
     startPath: function (strings) {
         // Sorts the strings and compares common starting substring of first and last string.
-        var A = strings.concat().sort(), a1 = A[0], a2 = A[A.length - 1], L = a1.length, i = 0;
-        while (i < L && a1.charAt(i) === a2.charAt(i)) i++;
-        var sharedStart = a1.substring(0, i);
-        if (sharedStart.indexOf("/") > -1) sharedStart = sharedStart.substr(0, 1 + sharedStart.lastIndexOf("/"));
+        var paths = strings.concat().sort(), j = 0, pathShort = paths[j], pathLong = paths[paths.length - 1], i = 0;
+        // Skip dirs at beginning of array.
+        while (fs.lstatSync(pathShort).isDirectory()) pathShort = paths[++j];
+        var L = pathShort.length;
+        while (i < L && pathShort.charAt(i) === pathLong.charAt(i)) i++;
+        var sharedStart = pathShort.substring(0, i);
         // Omit chars after the final forward-slash.
+        if (sharedStart.indexOf("/") > -1) sharedStart = sharedStart.substr(0, 1 + sharedStart.lastIndexOf("/"));
         return sharedStart;
     },
 
