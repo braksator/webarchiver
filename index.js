@@ -199,7 +199,6 @@ module.exports = {
 
                         if (startPath + files[i] != outDir + files[i]) {
                             // Copy the file over.
-                            console.log(startPath + files[i]);
                             var file = fs.readFileSync(startPath + files[i], 'binary');
                             fs.writeFileSync(outDir + files[i], file, 'binary');
                         }
