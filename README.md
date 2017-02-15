@@ -158,6 +158,8 @@ file to add additional prepended/appended PHP/HTML, custom CSS, and custom scrip
 revisited.
 + I had the foresight to include **options.keepdb** for batching/resuming jobs, but wound back the other work I did on
 that.  Might be a nice feature though so it's worth thinking about again.
++ Right now when a match is found it gets used, even though it might be a subset of a longer match in another file.  It
+would be possible to perform a full analysis of the files first before deciding which replacements to use.
 
 ## BTW...
 

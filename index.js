@@ -569,3 +569,4 @@ module.exports = {
 // @todo Rename files (and links to those files) based on title tag.
 // @todo Option to serve files through an index.php instead of accessing directly.
 // @todo Extract contents of style and script tags into separate files.
+// @todo Analyze all files first to find all matching strings, when there are overlaps keep only longest.  Slow but better result.
