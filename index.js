@@ -110,7 +110,7 @@ module.exports = {
         var numFiles = files.length;
 
         // Set up progress bar.
-        if (options.noprogress) {
+        if (!options.noprogress) {
 
             var bar = new ProgressBar('  processing [:bar] :percent :etas', {
                 width: 100,
