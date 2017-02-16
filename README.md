@@ -73,9 +73,9 @@ You may override some or all of these options.
 
 | Option name       | Type          | Description                                                                                                               | Default       |
 | ---               | ---           | ---                                                                                                                       |---            |
-| files             | string        | A glob pattern that indicates which files to process and output, or an array of glob strings.                             |               |
+| files             | string/array  | A glob pattern that indicates which files to process and output, or an array of glob strings.                             |               |
 | output            | string        | The path of an output directory if options.inplace is not used.                                                           |               |
-| justcopy          | bool          | Glob string/array of files to not process.                                                                                | false         |
+| justcopy          | string/array  | Glob pattern of files to not process.                                                                                | false         |
 | inplace           | bool          | If set to true will modify the existing files rather than creating new files.                                             | false         |
 | dedupe            | object/false  | Options to override deduplication behaviour (or set to false to not deduplicate).                                         | (See below)   |
 | minify            | object/false  | Options to override minification behaviour as per the html-minifier package (or set to false to not minify).              | (See below)   |
