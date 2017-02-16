@@ -182,7 +182,8 @@ revisited.
 + I had the foresight to include **options.keepdb** for batching/resuming jobs, but wound back the other work I did on
 that.  Might be a nice feature though so it's worth thinking about again.
 + Right now when a match is found it gets used, even though it might be a subset of a longer match in another file.  It
-would be possible to perform a full analysis of the files first before deciding which replacements to use.
+would be possible to perform a full analysis of the files first before deciding which replacements to use.  I suspect
+the current algorithm's behaviour to match the first file against itself first is also a detriment in choosing matches.
 + Performance can be improved at the expense of memory (both volatile and persistent).  When deduplicating; each
 file is compared against all the previous files and those are each read again from the disk, unwrapped, refragmented,
 and rewritten.  They could be stored in kfs in their unwrapped fragmented form - this would also mean that replacements
