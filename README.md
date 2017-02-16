@@ -43,14 +43,29 @@ will be written.
 
 Now type `node index.js` and let it go to work.
 
+### Customization
+
 This module exports all of its functions so you can potentially overwrite some parts of it! Some interesting ones are
 `replacementAllowed` which lets you reject a deduplication match, and `varCode` which can alter the variable name used
 in the PHP output, `prepend` and `append` to modify the start and end of each file (though altering the php file would
-probably be better). All the functions are parameterized so you can use a subset of the functions with minimal stubbing -
-if you just want the deduplicator you'll probably want the `fragments` function and look at how it is used by
-`findDuplicates`.
+probably be better).
 
-It takes about half a day to do a pass of a gig of data on an average machine, just to ballpark it for you, YMMV.
+All the functions are parameterized so you can use a subset of the functions with minimal stubbing - if you just want
+the deduplicator you'll probably want the `fragments` function and look at how it is used by `findDuplicates`.
+
+### Performance
+
+With just a few hundred files the operation is relatively quick.  Each file must be deduplicated against all of the files
+that came before, therefore the processing of each file is slower than the previous file, so it can get pretty tedious
+with larger sites.
+
+This is still a lot better than deduplicating with an IDE, which I tried beforehand, and had the IDE run out of memory
+and crash.  Slow and steady wins the race!
+
+- 2500 files (50MB) with 500 cache takes 2.5 hours for 1 pass.
+
+Your mileage may vary based on machine specs.  More analysis is needed here, particularly in how the **cache** options
+factors in.  No doubt once it hits the cache limit it will do a lot more disk reads.
 
 ## Options
 

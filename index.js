@@ -150,8 +150,8 @@ module.exports = {
         // Set up progress bar.
         if (!options.noprogress) {
 
-            var bar = new ProgressBar('  processing [:bar] :percent :etas', {
-                width: 100,
+            var bar = new ProgressBar('  Archiving [:bar] :percent :msg ETA: :eta sec', {
+                width: 50,
                 // This is a 1+2+3+4.. algorithm *passes plus one extra tick for writing the vfile.
                 total: ((numFiles * (numFiles + 1)) / 2) * options.passes + 1
             });
@@ -178,6 +178,7 @@ module.exports = {
         for (var pass = 0; pass < options.passes; ++pass) {
 
             for (var i = 0; i < numFiles; ++i) {
+
                 if (pass == 0) {
                     // Determine if this file shouldn't be processed.
                     skipFiles[i] = justCopy.indexOf(files[i]) > -1;
@@ -189,7 +190,6 @@ module.exports = {
                 if (fs.lstatSync(startPath + files[i]).isDirectory()) {
                     // Directory.
                     skipFiles[i] = true;
-                    bar.tick(i + options.passes);
                 }
                 else if (!skipFiles[i] && isBinaryFile.sync(startPath + files[i])) {
                     // Process binary files.
@@ -205,7 +205,6 @@ module.exports = {
                     }
 
                     skipFiles[i] = true;
-                    bar.tick(i + options.passes);
                 }
                 else {
                     // Process text files.
@@ -253,16 +252,10 @@ module.exports = {
 
                             if (long.length > 0) {
                                 // Apply the deduplication replacements.
-                                str = this.applyReplacements(str, long, numFiles, files, i, startPath, outDir, varName, wrapped, replacements, options, bar);
+                                str = this.applyReplacements(str, long, numFiles, files, i, startPath, outDir, varName, wrapped, replacements, options);
                             }
 
                         }
-                        else {
-                            bar.tick(i + 1);
-                        }
-                    }
-                    else {
-                        bar.tick(i + 1);
                     }
 
                     // Write the current text file.
@@ -270,6 +263,7 @@ module.exports = {
                     fs.writeFileSync(outDir + files[i], this.fixCodes(str));
                 }
 
+                bar.tick(i + 1, {'msg': 'File ' + (i + 1) + '/' + numFiles + ' (pass ' + (pass + 1) + '/' + options.passes + ')'});
             }
 
         }
@@ -293,12 +287,12 @@ module.exports = {
             fs.writeFileSync(outDir + options.vfile, this.fixCodes(vfile));
         }
 
-        // Saved one tick for the end so as not to be misleading with 100% after all files are processed.
-        bar.tick(1);
+        // Saved one tick for the end.
+        bar.tick(1, {'msg': 'Files processed, completing job...'});
     },
 
     // Apply replacements.
-    applyReplacements: function (str, long, numFiles, files, currentFileIndex, startPath, outDir, varName, wrapped, replacements, options, bar) {
+    applyReplacements: function (str, long, numFiles, files, currentFileIndex, startPath, outDir, varName, wrapped, replacements, options) {
         if (!wrapped[this.base64Enc(files[currentFileIndex])]) {
             // Add wrap to current file.
             str = this.prepend(options.vfile, (files[currentFileIndex].match(/\//g) || []).length) + this.addSlashes(str) + this.append();
@@ -316,8 +310,6 @@ module.exports = {
                 // Make the replacement in the current file.
                 str = this.replaceAll(str, long[j].str, this.shortCode(varName[0]));
 
-                bar.tick(1);
-
                 // Make the replacement in the other files.
                 for (var k in long[j].occ) {
                     if (k != currentFileIndex && long[j].occ.hasOwnProperty(k)) {
@@ -331,18 +323,11 @@ module.exports = {
                         str2 = this.replaceAll(str2, long[j].str, this.shortCode(varName[0]));
                         fs.writeFileSync(outDir + files[k], this.fixCodes(str2));
                     }
-                    bar.tick(1);
                 }
 
                 // varName has been spent, so update to another one.
                 varName[0] = this.nextVarName(varName[0]);
 
-            }
-
-            // Update the progress bar to tick past the 'other' files that weren't iterated here.
-            var remainder = j - long[j].occ.length - 1;
-            if (remainder > 0) {
-                bar.tick(remainder);
             }
 
         }
