@@ -44,7 +44,7 @@ lint(paths, options);
 describe('#startPath', function () {
     it('should determine common prefix path from paths', function () {
         var dirs = ['var/www/html/index.html', 'var/www/html/index.bkp', 'var/www/html/includes/header.php'];
-        var result = app.startPath(dirs);
+        var result = app.getStartPath(dirs);
         expect(result).to.equal('var/www/html/');
     });
 
@@ -52,17 +52,23 @@ describe('#startPath', function () {
 
 describe('#outDir', function () {
     it('should output to the same directory', function () {
-        var result = app.outDir('var/www/html/', true, null, null);
+        app.options = { inplace: true };
+        app.startPath = 'var/www/html/';
+        var result = app.getOutDir();
         expect(result).to.equal('var/www/html/');
     });
 
     it('should output to the output directory', function () {
-        var result = app.outDir('var/www/html/', false, 'output', null);
+        app.options = { output: 'output' };
+        app.startPath = 'var/www/html/';
+        var result = app.getOutDir();
         expect(result).to.equal('output/');
     });
 
     it('should output to the output directory but also nest the input paths', function () {
-        var result = app.outDir('var/www/html/', false, 'output', true);
+        app.options = { output: 'output', fullnest: true };
+        app.startPath = 'var/www/html/';
+        var result = app.getOutDir();
         expect(result).to.equal('output/var/www/html/');
     });
 
@@ -81,10 +87,10 @@ describe('#fragments', function () {
             var a = input[i].split(re).filter(Boolean);
             for (var j = 0; j <= i; j++) {
                 var b = input[j].split(re).filter(Boolean);
-                app.fragments(long, a, b, i, j, min);
+                app.fragmentMatches(long, a, b, i, j, min);
             }
         }
-        expect(long).to.deep.equal([{str: 'inters', len: 6, alen: 1, occ: {'0': [0], '1': [0], '2': [0]}}]);
+        expect(long).to.deep.equal([{str: 'inters', occ: {'0': [0], '1': [0], '2': [0]}}]);
 
     });
 
@@ -97,16 +103,11 @@ describe('#fragments', function () {
             var a = input[i].split(re).filter(Boolean);
             for (var j = 0; j <= i; j++) {
                 var b = input[j].split(re).filter(Boolean);
-                app.fragments(long, a, b, i, j, min);
+                app.fragmentMatches(long, a, b, i, j, min);
             }
         }
 
-        expect(long).to.deep.equal([{
-            str: '<test>test</test>',
-            len: 17,
-            alen: 2,
-            occ: {'0': [0, 2]}
-        }]);
+        expect(long).to.deep.equal([{str: '<test>test</test>', occ: {'0': [0, 2]}}]);
 
     });
 
@@ -122,18 +123,14 @@ describe('#fragments', function () {
             var a = input[i].split(re).filter(Boolean);
             for (var j = 0; j <= i; j++) {
                 var b = input[j].split(re).filter(Boolean);
-                app.fragments(long, a, b, i, j, min);
+                app.fragmentMatches(long, a, b, i, j, min);
             }
         }
-        expect(long).to.deep.equal([{str: 'foo bar;', len: 8, alen: 2, occ: {'0': [1, 7]}},
-            {
-                str: '<test>test</test>',
-                len: 17,
-                alen: 3,
-                occ: {'0': [3, 11]}
-            },
-            {str: 'baz', len: 3, alen: 1, occ: {'0': [10, 18]}}]
-        );
+        expect(long).to.deep.equal([
+            {str: 'foo bar;', occ: {'0': [1, 7]}},
+            {str: '<test>test</test>', occ: {'0': [3, 11]}},
+            {str: 'baz', occ: {'0': [10, 18]}}
+        ]);
 
     });
 
@@ -143,26 +140,40 @@ describe('#minify', function () {
 
     it('should handle a simple minification', function () {
         var html = "<b>Test</b>\n <p> A <em>paragraph</em> </p>\r\n\n    <style type=\"text/css\"> body { color: #ffffff; } </style>\n\n";
-        var minify_opts = {
-            collapseBooleanAttributes: true,
-            collapseInlineTagWhitespace: true,
-            collapseWhitespace: true,
-            conservativeCollapse: false,
-            html5: false,
-            minifyCSS: true,
-            minifyJS: true,
-            removeAttributeQuotes: true,
-            removeComments: true,
-            removeEmptyAttributes: true,
-            removeRedundantAttributes: true,
-            removeScriptTypeAttributes: true,
-            removeStyleLinkTypeAttributes: true
+        app.options = {
+            minify: {
+                collapseBooleanAttributes: true,
+                collapseInlineTagWhitespace: true,
+                collapseWhitespace: true,
+                conservativeCollapse: false,
+                html5: false,
+                minifyCSS: true,
+                minifyJS: true,
+                removeAttributeQuotes: true,
+                removeComments: true,
+                removeEmptyAttributes: true,
+                removeRedundantAttributes: true,
+                removeScriptTypeAttributes: true,
+                removeStyleLinkTypeAttributes: true
+            }
         };
-        var result = app.minify(html, {minify:minify_opts});
+        var result = app.minify(html);
         expect(result).to.equal("<b>Test</b><p>A<em>paragraph</em></p><style>body{color:#fff}</style>");
     });
 
 });
+
+
+describe('#doReplace', function () {
+
+    it('should replace a string that spans multiple array items', function () {
+        app.files = {0:{}};
+        var res = app.doReplace(['aaa', 'bbb', 'aaa', 'ccc', 'aaa', 'ddd'], 'aaaccc', 'v', 0);
+        expect(res.join('')).to.equal("aaabbb'.$v.'aaaddd");
+    });
+
+});
+
 
 describe('#nextVarName', function () {
 
@@ -233,7 +244,7 @@ describe('#webArchiver', function () {
     it('should throw an error when output options do not make sense', function () {
         expect(function () {
             app.webArchiver({files: "test/testdata/*.html"});
-        }).to.throw("You must set the 'inplace' option to true or provide an output directory path to 'output'.");
+        }).to.throw("You must set either 'output' or 'inplace'.");
     });
 
     it('should archive a single file to new directory', function () {
@@ -409,7 +420,7 @@ describe('#webArchiver', function () {
 
     it('should archive multiple files to new directory', function () {
         // Arrange
-        this.timeout(40000);
+        this.timeout(60000);
 
         var dir = "test/output/multiple";
 
@@ -496,6 +507,38 @@ describe('#webArchiver', function () {
         assert.include(buf1.toString(), "include '../v.php';", '');
     });
 
+    it('should fullnest nested file', function () {
+        // Arrange
+        this.timeout(20000);
+
+        var dir = "test/output/nested";
+
+        // First delete the dir and confirm it isn't there.
+        del.sync(dir);
+        expect(dir).to.not.be.a.path();
+
+        var options = {
+            files: ["test/testdata/nested", "test/testdata/nested/nested.html", "test/testdata/unnested.html"],
+            output: dir,
+            noprogress: true,
+            fullnest: 1
+        };
+
+        // Act
+        var result = app.webArchiver(options);
+
+        // Assert
+
+        // Does the output directory exist now?
+        assert.isDirectory(dir, "Is Directory");
+
+        // Does the include in the file have the relative directory dots?
+        var buf1 = fs.readFileSync(dir + '/test/testdata/nested/nested.html');
+        assert.include(buf1.toString(), "include '../v.php';", '');
+
+        // Does the vfile exist at the output dir + common start path location?
+        assert.isFile(dir + '/test/testdata/v.php', "Is File");
+    });
 
     it('should just copy file', function () {
         // Arrange

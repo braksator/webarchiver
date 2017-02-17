@@ -50,8 +50,8 @@ This module exports all of its functions so you can potentially overwrite some p
 in the PHP output, `prepend` and `append` to modify the start and end of each file (though altering the php file would
 probably be better).
 
-All the functions are parameterized so you can use a subset of the functions with minimal stubbing - if you just want
-the deduplicator you'll probably want the `fragments` function and look at how it is used by `findDuplicates`.
+If you just want the deduplicator logic you'll probably want the `fragmentMatches` function and look at how it is used by
+`findDuplicates`.
 
 ### Performance
 
@@ -62,13 +62,11 @@ tedious with larger sites.
 This is still a lot better than deduplicating with an IDE, which I tried beforehand, and had the IDE run out of memory
 and crash.  Slow and steady wins the race!
 
-- 1000 files (18MB) with 500 cache takes 8 minutes for 1 pass.
-- 1000 files (18MB) with true cache takes 3 minutes for 1 pass.
-- 2500 files (50MB) with 500 cache takes 2.5 hours for 1 pass.
-- 2500 files (50MB) with true cache takes 40 minutes for 1 pass.
+- 1000 files (18MB) takes ~2.5 minutes for 1 pass with minLength 20.
+- 1000 files (18MB) takes ~3.5 minutes for 1 pass with minLength 10.
+(@todo more performance tests needed with larger data sets to convey the decline in speed)
 
-Your mileage may vary based on machine specs.  More analysis is needed here, particularly in how the **cache** option
-factors in.  No doubt once it hits the cache limit it will do a lot more disk reads.
+Your mileage may vary based on machine specs and options.
 
 ## Options
 
@@ -83,10 +81,7 @@ You may override some or all of these options.
 | dedupe            | object/false  | Options to override deduplication behaviour (or set to false to not deduplicate).                                         | (See below)   |
 | minify            | object/false  | Options to override minification behaviour as per the html-minifier package (or set to false to not minify).              | (See below)   |
 | vfile             | string        | The name of the php variables file if 'v.php' is not acceptable.                                                          | 'v.php'       |
-| dbdir             | string        | The name of the key-file storage directory if 'vdb' is not acceptable.                                                    | 'vdb'         |
 | fullnest          | bool          | Whether to maintain full path nesting in the output directory.                                                            | false         |
-| cache             | int/bool      | The size of the memory cache in terms of key-values, true for unlimited, false for none.                                  | 500           |
-| keepdb            | bool          | Whether to keep the key-file storage after completion, useful for batching.                                               | false         |
 | skipcontaining    | bool          | An array of strings, if a text file contains any of them it will be 'just copied'.                                        | ['<?']        |
 | noprogress        | bool          | Set to true to disable the progress bar.                                                                                  | false         |
 | passes            | int           | Number of deduplication passes.  Often things are missed on first pass.  Can increase for extra dedupe checks.            | 2             |
@@ -110,17 +105,22 @@ Replacements are performed in the string by substituting portions of duplicated 
 the vars are automatically generated to be as short as possible.  Therefore each file has some overhead (28 chars), each
 replacement instance has some overhead (6+ chars), and the storage of the original text has some overhead too.
 
-Due to the overhead it is advisable to not choose a particularly small value for **options.dedupe.minLength** and
-**options.dedupe.minSaving**.  The defaults are about as small as they should be.
+Due to the overhead it is advisable to not choose a particularly small value for **options.dedupe.minSaving**.  The
+default is already quite small and relies on there being several duplicates per file to justify replacement.   You may
+want to set it higher.  Setting **options.dedupe.minLength** higher will speed up the algorithm, setting it to a falsey
+value will automatically calculate it each time based on minSaving.  Setting minLength to greater than 0 but less than
+minSaving + 6 is a poor choice for computing efficiency. Bottom line though; both minLength and minSaving will be
+enforced no matter what you do here.
 
 | Option name       | Type          | Description                                                               | Default                                       |
 | ---               | ---           | ---                                                                       |---                                            |
-| minLength         | int           | The minimum length a string of text must be to deduplicate it.            | 10                                            |
+| minLength         | int|false     | The minimum length a string of text must be to deduplicate it.            | 10                                            |
 | minSaving         | int           | The minimum length of string minus the replacement instance overhead      | 4                                             |
 | startsWith        | char[]        | Regex escaped chars that a fragment can start with.                       | ['<', '{', '\\(', '\\[', '"']                 |
 | endsWith          | char[]        | Regex escaped chars that a fragment can end with.                         | ['>', '}', '\\)', '\\]', '"', '\\n', '\\s']   |
 
-Warning: Don't add . or $ or ' or alphanumeric chars into startsWith/endsWith.
+Warning: Don't add . or $ or ' or alphanumeric chars into startsWith/endsWith.  (This warning applies to a previous version
+of the module.  Perhaps you can disregard it now at your own risk.)
 
 You may override some or all of these options at **options.dedupe**, your options will be merged into the defaults.
 You can set **options.dedupe** to false to disable deduplication.
@@ -159,7 +159,7 @@ PHP is common, hosting is cheap, lots of people understand it, and syntactically
 purposes.  It seems like an ideal choice here.  However, I am open to be convinced to support another method of
 preprocessing.
 
-While we're on the subject the PHP generated here is **basic**.  **Include** and **echo** statements, variable
+While we're on the subject the PHP generated here is quite basic; **Include** and **echo** statements, variable
 assignment, and string concatenation.  You should have no worries about which version of PHP to run.
 
 ## What else?
@@ -178,17 +178,12 @@ I have some more ideas for this package which I may pursue:
 file to add additional prepended/appended PHP/HTML, custom CSS, and custom scripts across all of the files.
 + Extract contents of style and script tags into separate files.  This would allow them to be cached client-side.
 + I wanted to support image compression out of the box, but that proved more time-consuming than I'd hoped, could be
-revisited.
-+ I had the foresight to include **options.keepdb** for batching/resuming jobs, but wound back the other work I did on
-that.  Might be a nice feature though so it's worth thinking about again.
+revisited but not a high priority.
++ Possibly batching/resuming, or adding more files later should be supported.  I'm less enthusiastic about this idea
+that I was previously.
 + Right now when a match is found it gets used, even though it might be a subset of a longer match in another file.  It
 would be possible to perform a full analysis of the files first before deciding which replacements to use.  I suspect
 the current algorithm's behaviour to match the first file against itself first is also a detriment in choosing matches.
-+ Performance can be improved at the expense of memory (both volatile and persistent).  When deduplicating; each
-file is compared against all the previous files and those are each read again from the disk, unwrapped, refragmented,
-and rewritten.  They could be stored in kfs in their unwrapped fragmented form - this would also mean that replacements
-would have to be done on the fragmented version, but likely would allow for more deduplication potential in subsequent
-passes, as currently existing replacements tend to get locked away in an unmatchable fragment.
 
 
 ## BTW...
