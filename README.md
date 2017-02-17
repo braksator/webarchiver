@@ -64,6 +64,7 @@ and crash.  Slow and steady wins the race!
 
 - 1000 files (18MB) takes ~2.5 minutes for 1 pass with minLength 20.
 - 1000 files (18MB) takes ~3.5 minutes for 1 pass with minLength 10.
+
 (@todo more performance tests needed with larger data sets to convey the decline in speed)
 
 Your mileage may vary based on machine specs and options.
