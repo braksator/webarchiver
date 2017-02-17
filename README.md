@@ -115,7 +115,7 @@ enforced no matter what you do here.
 
 | Option name       | Type          | Description                                                               | Default                                       |
 | ---               | ---           | ---                                                                       |---                                            |
-| minLength         | int|false     | The minimum length a string of text must be to deduplicate it.            | 10                                            |
+| minLength         | int/false     | The minimum length a string of text must be to deduplicate it.            | 10                                            |
 | minSaving         | int           | The minimum length of string minus the replacement instance overhead      | 4                                             |
 | startsWith        | char[]        | Regex escaped chars that a fragment can start with.                       | ['<', '{', '\\(', '\\[', '"']                 |
 | endsWith          | char[]        | Regex escaped chars that a fragment can end with.                         | ['>', '}', '\\)', '\\]', '"', '\\n', '\\s']   |
