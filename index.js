@@ -109,8 +109,8 @@ var webarchiver = {};
                 dedupe: {
                     minLength: 20,
                     minSaving: 10,
-                    startsWith: ['<', '{', '\\(', '\\[', '"'],
-                    endsWith: ['>', '}', '\\)', '\\]', '"', '\\n', '\\s']
+                    startsWith: ['<', '{', '\\(', '\\['],
+                    endsWith: ['>', '}', '\\)', '\\]', '\\n', '\\s']
                 }
             };
             this.options = mergeOptions(defaults, options);
