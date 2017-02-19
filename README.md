@@ -54,7 +54,6 @@ node ./node_modules/webarchiver --files "website/**" --output "archived"
 For array values, provide the option multiple times, e.g.: `--files "pattern1" --files "pattern2"`
 For dedupe and minify values just use a dot, e.g.: `--dedupe.minLength 20`
 - This might not accept HTML Minifier's regex options.
-- The --dedupe.minLength option won't accept false but will accept 0 instead.
 
 ### Customization
 
