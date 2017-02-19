@@ -124,7 +124,7 @@ You may override some or all of these options.
 | inPlace           | bool          | If set to true will modify the existing files rather than creating new files.  Not recommended.                           | false         |
 | dedupe            | object/false  | Options to override deduplication behaviour (or set to false to not deduplicate - why would you?).                        | (See below)   |
 | minify            | object/false  | Options to override minification behaviour as per the html-minifier package (or set to false to not minify).              | (See below)   |
-| vFile             | string        | The name of the php variables file if 'v.php' is not acceptable.                                                          | 'v.php'       |
+| vFile             | string        | The name of the PHP variables file if 'v.php' is not acceptable.                                                          | 'v.php'       |
 | fullNest          | bool          | Whether to nest the full input path into the output directory.  You shouldn't need this in most cases.                    | false         |
 | skipContaining    | bool          | An array of strings; if a text file contains any of them the file will be treated as though it was matched in justCopy.   | ['<?']        |
 | noProgress        | bool          | Set to true to disable the progress bar.                                                                                  | false         |
@@ -176,7 +176,7 @@ minSaving + 6 is a poor choice for computing efficiency. Bottom line though; bot
 enforced no matter what you do here.
 
 The more chars added in *options.dedupe.startsWith* and *options.dedupe.endsWith* the slower the deduplication tends
-to go.  At the minimum for html you should just use '<' and '>', but the braces, brackets, and parenthesis will help with
+to go.  At the minimum for HTML you should just use '<' and '>', but the braces, brackets, and parenthesis will help with
 JavaScript and CSS.  Line breaks should be rare with minification so they may as well be included.  Whitespace is included by
 default as it is quite an effective addition but does significantly hurt performance.  Be aware that all chars are matched
 within the text of the website too (this module does not consider the DOM structure), and whitespace is particularly
