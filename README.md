@@ -171,9 +171,6 @@ options object contains configuration for additional deduplication behavior.
 | startsWith        | char[]        | Regex escaped chars that a fragment can start with.                       | ```['<', '{', '\\(', '\\[']```                                |
 | endsWith          | char[]        | Regex escaped chars that a fragment can end with.                         | ```['>', '}', '\\)', '\\]', '\\n', '\\s']```                  |
 
-Note: the default values for startsWith and endsWith shown here in the rendered markdown are incorrect, view as plain text
-or check the source code to see the properly regex escaped chars.
-
 You may override some or all of these options at **options.dedupe**, your options will be merged into the defaults.
 You can set **options.dedupe** to false to disable deduplication.
 
