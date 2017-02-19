@@ -77,13 +77,16 @@ wa.webArchiver({
     passes: 1,
     dedupe: {
         minLength: 25,
-        minSaving: 12,
+        minSaving: 15,
         startsWith: ['<'],
         endsWith: ['>', '\\n']
     }
 });
 console.timeEnd('wa');
 ```
+
+Finding too many duplicates can lead to poorer compression, see the *Dedupe options* and *Performance* sections for a
+discussion.
 
 ### Command line
 
