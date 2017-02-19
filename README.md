@@ -43,7 +43,7 @@ will be written.
 
 Now type `node index.js` and let it go to work.
 
-### More Examples
+#### More Examples
 
 Finds more duplicates, but runs very slow:
 
@@ -97,7 +97,7 @@ For array values, provide the option multiple times, e.g.: `--files "pattern1" -
 For dedupe and minify values just use a dot, e.g.: `--dedupe.minLength 20`
 - This might not accept HTML Minifier's regex options.
 
-### Customization
+## Customization
 
 This module exports all of its functions so you can potentially overwrite some parts of it! Some interesting ones are
 `replacementAllowed` which lets you reject a deduplication match, and `varCode` which can alter the variable name used
@@ -164,12 +164,12 @@ give higher fragmentation and more potential to identify duplicates but noticeab
 The following options are related to finding deduplication matches and performing deduplication replacements.  The main
 options object contains configuration for additional deduplication behavior.
 
-| Option name       | Type          | Description                                                               | Default                                                         |
-| ---               | ---           | ---                                                                       |---                                                              |
-| minLength         | int           | The minimum length a string of text must be to deduplicate. (0 = auto)    | 20                                                              |
-| minSaving         | int           | The minimum length of string minus the replacement instance overhead      | 10                                                              |
-| startsWith        | char[]        | Regex escaped chars that a fragment can start with.                       | `['<', '{', '\\(', '\\[']`                                      |
-| endsWith          | char[]        | Regex escaped chars that a fragment can end with.                         | `['>', '}', '\\)', '\\]', '\\n', '\\s']`                        |
+| Option name       | Type          | Description                                                               | Default                                                       |
+| ---               | ---           | ---                                                                       |---                                                            |
+| minLength         | int           | The minimum length a string of text must be to deduplicate. (0 = auto)    | 20                                                            |
+| minSaving         | int           | The minimum length of string minus the replacement instance overhead      | 10                                                            |
+| startsWith        | char[]        | Regex escaped chars that a fragment can start with.                       | ```['<', '{', '\\(', '\\[']```                                |
+| endsWith          | char[]        | Regex escaped chars that a fragment can end with.                         | ```['>', '}', '\\)', '\\]', '\\n', '\\s']```                  |
 
 Note: the default values for startsWith and endsWith shown here in the rendered markdown are incorrect, view as plain text
 or check the source code to see the properly regex escaped chars.
