@@ -20,15 +20,15 @@ var webarchiver = {};
          * @param {object} options - The options.
          * @param {string|array} options.files - A glob pattern that indicates which files to process, or an array of glob strings.
          * @param {string|array} options.justCopy - Glob string/array of files to not process.
-         * @param {undefined|null|bool} options.inPlace - If set to true will modify the existing files rather than creating new files.
+         * @param {bool} options.inPlace - If set to true will modify the existing files rather than creating new files.
          * @param {string} options.output - The path of an output directory if options.inPlace is not used.
          * @param {object|false} options.dedupe - Options to override deduplication behaviour (or set to false to not deduplicate).
          * @param {object|false} options.minify - Options to override minification behaviour as per the html-minifier package (or set to false to not minify).
          * @param {string} options.vFile - The name of the php variables file if 'v.php' is not acceptable.
          * @param {bool} options.fullNest - Whether to maintain full path nesting in the output directory - defaults to false.
          * @param {array} options.skipContaining - An array of strings, if a text file contains any of them it will be 'just copied'. Default is ['<?'].
-         * @param {bool} options.noprogress - Set to true to remove the progress bar.
-         * @param {bool} options.passes - Number of deduplication passes over the files.  Defaults to 2.
+         * @param {bool} options.noProgress - Set to true to remove the progress bar.
+         * @param {int} options.passes - Number of deduplication passes over the files.  Defaults to 2.
          */
         webArchiver: function (options) {
             // Check that there are options.
@@ -117,7 +117,7 @@ var webarchiver = {};
         },
 
         progressBar: function () {
-            if (!this.options.noprogress) {
+            if (!this.options.noProgress) {
                 this.bar = new ProgressBar('  Archiving [:bar] :percent :msg ETA: :eta sec', {
                     width: 50,
                     // This is a 1+2+3+4... formula multiplied by passes plus numFiles to write out the files plus one
