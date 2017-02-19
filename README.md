@@ -43,6 +43,48 @@ will be written.
 
 Now type `node index.js` and let it go to work.
 
+### More Examples
+
+Finds more duplicates, but runs very slow:
+
+```javascript
+var wa = require('webarchiver');
+
+console.time('wa');
+wa.webArchiver({
+    files: "website/**",
+    output: "archived",
+    passes: 3,
+    dedupe: {
+        minLength: 0,
+        minSaving: 8,
+        startsWith: ['<', '{', '\\(', '\\[', '"', "\\'", '#', '\\.'],
+        endsWith: ['>', '}', '\\)', '\\]', '"', "\\'", '\\n', '\\s', ';']
+    }
+});
+console.timeEnd('wa');
+```
+
+Finds fewer duplicates, but runs faster:
+
+```javascript
+var wa = require('webarchiver');
+
+console.time('wa');
+wa.webArchiver({
+    files: "website/**",
+    output: "archived",
+    passes: 1,
+    dedupe: {
+        minLength: 25,
+        minSaving: 12,
+        startsWith: ['<'],
+        endsWith: ['>', '\\n']
+    }
+});
+console.timeEnd('wa');
+```
+
 ### Command line
 
 It is also possible to run it as a command like so:
@@ -122,12 +164,12 @@ give higher fragmentation and more potential to identify duplicates but noticeab
 The following options are related to finding deduplication matches and performing deduplication replacements.  The main
 options object contains configuration for additional deduplication behavior.
 
-| Option name       | Type          | Description                                                               | Default                                                       |
-| ---               | ---           | ---                                                                       |---                                                            |
-| minLength         | int           | The minimum length a string of text must be to deduplicate. (0 = auto)    | 20                                                             |
-| minSaving         | int           | The minimum length of string minus the replacement instance overhead      | 10                                                             |
-| startsWith        | char[]        | Regex escaped chars that a fragment can start with.                       | ['<', '{', '\\(', '\\[']                                      |
-| endsWith          | char[]        | Regex escaped chars that a fragment can end with.                         | ['>', '}', '\\)', '\\]', '\\n', '\\s']                        |
+| Option name       | Type          | Description                                                               | Default                                                         |
+| ---               | ---           | ---                                                                       |---                                                              |
+| minLength         | int           | The minimum length a string of text must be to deduplicate. (0 = auto)    | 20                                                              |
+| minSaving         | int           | The minimum length of string minus the replacement instance overhead      | 10                                                              |
+| startsWith        | char[]        | Regex escaped chars that a fragment can start with.                       | `['<', '{', '\\(', '\\[']`                                      |
+| endsWith          | char[]        | Regex escaped chars that a fragment can end with.                         | `['>', '}', '\\)', '\\]', '\\n', '\\s']`                        |
 
 Note: the default values for startsWith and endsWith shown here in the rendered markdown are incorrect, view as plain text
 or check the source code to see the properly regex escaped chars.
