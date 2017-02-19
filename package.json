@@ -1,6 +1,6 @@
 {
   "name": "webarchiver",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "Deduplicates and compresses a directory of website files and the result uses PHP.",
   "main": "index.js",
   "scripts": {
