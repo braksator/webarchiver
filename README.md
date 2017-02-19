@@ -165,9 +165,9 @@ the original text has some overhead too (6 chars for the vFile header and 6+ cha
 > - 6+ chars in vFile: `$v='';`
 > - 6 char vFile header: `<?php `
 
-Tip: You could be clever and cut out some overhead by using the 'auto_prepend_file', 'auto_append_file', and 'short_open_tag'
-[directives in php.ini](http://php.net/manual/en/ini.core.php) then overriding the functions 'append', 'prepend', and
-perhaps `createVarFile` in this module to work with your system.
+Tip: You could be clever and cut out some overhead by using the *auto_prepend_file*, *auto_append_file*, and *short_open_tag*
+[directives in php.ini](http://php.net/manual/en/ini.core.php) then overriding the functions *append*, *prepend*, and
+perhaps *createVarFile* in this module to work with your system.
 
 Due to the overhead it is advisable to not choose a particularly small value for *options.dedupe.minSaving*.  The
 default is already quite small and relies on there being several of most duplicates to justify replacement.   You may
