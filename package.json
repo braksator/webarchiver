@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "mocha --reporter spec",
-    "coverage": "istanbul cover ./node_modules/mocha/bin/_mocha -- -R spec"
+    "coverage": "istanbul cover ./node_modules/mocha/bin/_mocha -- -R spec",
+    "performance": "node ./test/performance"
   },
   "author": "Daniel Braksator",
   "license": "ISC",
@@ -14,6 +15,7 @@
     "url": "https://github.com/braksator/webarchiver.git"
   },
   "dependencies": {
+    "command-line-args": "^4.0.1",
     "del": "^2.2.2",
     "globby": "^6.1.0",
     "html-minifier": "^3.3.1",
@@ -25,7 +27,10 @@
   "devDependencies": {
     "chai": "^3.5.0",
     "chai-fs": "^1.0.0",
+    "fs-extra": "^2.0.0",
+    "get-folder-size": "^1.0.0",
     "istanbul": "^0.4.5",
+    "markdown-table": "^1.1.0",
     "mocha": "^3.2.0",
     "mocha-eslint": "^3.0.1"
   }

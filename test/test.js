@@ -52,7 +52,7 @@ describe('#startPath', function () {
 
 describe('#outDir', function () {
     it('should output to the same directory', function () {
-        app.options = { inplace: true };
+        app.options = { inPlace: true };
         app.startPath = 'var/www/html/';
         var result = app.getOutDir();
         expect(result).to.equal('var/www/html/');
@@ -66,7 +66,7 @@ describe('#outDir', function () {
     });
 
     it('should output to the output directory but also nest the input paths', function () {
-        app.options = { output: 'output', fullnest: true };
+        app.options = { output: 'output', fullNest: true };
         app.startPath = 'var/www/html/';
         var result = app.getOutDir();
         expect(result).to.equal('output/var/www/html/');
@@ -292,7 +292,7 @@ describe('#webArchiver', function () {
         var options = {
             files: "test/testdata/single.html",
             output: dir,
-            noprogress: true,
+            noProgress: true,
             dedupe: false
         };
 
@@ -326,7 +326,7 @@ describe('#webArchiver', function () {
         var options = {
             files: "test/testdata/single.html",
             output: dir,
-            noprogress: true,
+            noProgress: true,
             minify: false
         };
 
@@ -364,7 +364,7 @@ describe('#webArchiver', function () {
         var options = {
             files: "test/testdata/single.html",
             output: dir,
-            noprogress: true,
+            noProgress: true,
             minify: false,
             dedupe: false
         };
@@ -403,7 +403,7 @@ describe('#webArchiver', function () {
 
         var options = {
             files: "test/testdata/double*",
-            noprogress: true,
+            noProgress: true,
             output: dir
         };
 
@@ -433,7 +433,10 @@ describe('#webArchiver', function () {
             files: ["test/testdata/multiple*"],
             output: dir,
             passes: 5,
-            noprogress: true
+            noProgress: true,
+            dedupe: {
+                minLength: 20
+            }
         };
 
         var result = app.webArchiver(options);
@@ -460,7 +463,7 @@ describe('#webArchiver', function () {
         var options = {
             files: "test/testdata/skip.php",
             output: dir,
-            noprogress: true
+            noProgress: true
         };
 
         // Act
@@ -489,9 +492,9 @@ describe('#webArchiver', function () {
         expect(dir).to.not.be.a.path();
 
         var options = {
-            files: ["test/testdata/nested", "test/testdata/nested/nested.html", "test/testdata/unnested.html"],
+            files: ["test/testdata/nested", "test/testdata/nested/**", "test/testdata/unnested.html"],
             output: dir,
-            noprogress: true
+            noProgress: true
         };
 
         // Act
@@ -507,7 +510,7 @@ describe('#webArchiver', function () {
         assert.include(buf1.toString(), "include '../v.php';", '');
     });
 
-    it('should fullnest nested file', function () {
+    it('should full nest nested file', function () {
         // Arrange
         this.timeout(20000);
 
@@ -518,10 +521,10 @@ describe('#webArchiver', function () {
         expect(dir).to.not.be.a.path();
 
         var options = {
-            files: ["test/testdata/nested", "test/testdata/nested/nested.html", "test/testdata/unnested.html"],
+            files: ["test/testdata/nested", "test/testdata/nested/**", "test/testdata/unnested.html"],
             output: dir,
-            noprogress: true,
-            fullnest: 1
+            noProgress: true,
+            fullNest: 1
         };
 
         // Act
@@ -552,9 +555,9 @@ describe('#webArchiver', function () {
 
         var options = {
             files: ["test/testdata/justcopy.html"],
-            justcopy: ["test/testdata/justcopy.html"],
+            justCopy: ["test/testdata/justcopy.html"],
             output: dir,
-            noprogress: true
+            noProgress: true
         };
 
         // Act
@@ -585,7 +588,7 @@ describe('#webArchiver', function () {
         var options = {
             files: ["test/testdata/binary/*"],
             output: dir,
-            noprogress: true
+            noProgress: true
         };
 
         // Act
