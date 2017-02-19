@@ -233,7 +233,7 @@ file to add additional prepended/appended PHP/HTML, custom CSS, and custom scrip
 + I wanted to support image compression out of the box, but that proved more time-consuming than I'd hoped, could be
 revisited but not a high priority.
 + Possibly batching/resuming, or adding more files later should be supported.  I'm less enthusiastic about this idea
-that I was previously.
+than I was previously.
 + Right now when a match is found it gets used, even though it might be a subset of a longer match in another file.  It
 would be possible to perform a full analysis of the files first before deciding which replacements to use.  I suspect
 the current algorithm's behaviour to match the first file against itself first is also a detriment in choosing matches.
