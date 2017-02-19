@@ -133,30 +133,36 @@ You may override some or all of these options.
 
 ## Dedupe options
 
-Deduplication is performed on files that don't appear to contain binary data, aren't matched with **options.justCopy**,
-and don't contain strings in **options.skipContaining**.
+Deduplication is performed on files that don't appear to contain binary data, aren't matched with *options.justCopy*,
+and don't contain strings in *options.skipContaining*.
 
 To speed up deduplication the file is analyzed in fragments where the fragments either start with a character in
-**options.dedupe.startsWith**, or end with a character listed in **options.dedupe.endsWith**.  Multiple fragments may
+*options.dedupe.startsWith*, or end with a character listed in *options.dedupe.endsWith*.  Multiple fragments may
 be joined together to create a duplication match, but no match will be smaller than a fragment.   Deduplication is
 performed after minification to increase the chances of a match.
 
 The deduplication of the file is reconstructed on the server with PHP preprocessing.  Therefore each file is prepended
-with a PHP include to a file with the replacement variables (**options.vFile**) and the contents of the file is echo'd
+with a PHP include to a file with the replacement variables (*options.vFile*) and the contents of the file is echo'd
 as a PHP string.  This works with HTML/CSS/JS files if they are set to be preprocessed by PHP on the server.
 
 Replacements are performed in the string by substituting portions of duplicated text with '.$var.' - where the names of
 the vars are automatically generated to be as short as possible.  Therefore each file has some overhead (28 chars), each
-replacement instance has some overhead (6+ chars), and the storage of the original text has some overhead too.
+replacement instance has some overhead (6+ chars*, or 3+ chars* when adjacent to another replacement), and the storage of
+the original text has some overhead too (6 chars for the vFile header and 6+ chars* per string plus the length of the string).
 
-Due to the overhead it is advisable to not choose a particularly small value for **options.dedupe.minSaving**.  The
+> *The plus (+) refers to the fact that replacement variable names start out at a length of one character and
+> increase in size as the program runs, the schedule for how many variables of each length are used is as follows:
+> 1: 26, 2: 936, 3: 33696, 4: 1213056 ... n: `36 ^ n - 10 * 36 ^ (n - 1)`
+> (6+ chars in typical replacement: `'.$v.'` 3+ chars in adjacent replacement: `$v.` 6+ chars in vFile: `$v='';`)
+
+Due to the overhead it is advisable to not choose a particularly small value for *options.dedupe.minSaving*.  The
 default is already quite small and relies on there being several of most duplicates to justify replacement.   You may
-want to set it higher!  Setting **options.dedupe.minLength** will speed up the algorithm, as the default of a falsey
+want to set it higher!  Setting *options.dedupe.minLength* will speed up the algorithm, as the default of a falsey
 value will automatically calculate it each time based on minSaving.  Setting minLength to greater than 0 but less than
 minSaving + 6 is a poor choice for computing efficiency. Bottom line though; both minLength and minSaving will be
 enforced no matter what you do here.
 
-The more chars added in **options.dedupe.startsWith** and **options.dedupe.endsWith** the slower the deduplication tends
+The more chars added in *options.dedupe.startsWith* and *options.dedupe.endsWith* the slower the deduplication tends
 to go.  At the minimum for html you should just use '<' and '>', but the braces, brackets, and parenthesis will help with
 JavaScript and CSS.  Line breaks should be rare with minification so they may as well be included.  Whitespace is included by
 default as it is quite an effective addition but does significantly hurt performance.  Be aware that all chars are matched
@@ -174,13 +180,13 @@ options object contains configuration for additional deduplication behavior.
 | startsWith        | char[]        | Regex escaped chars that a fragment can start with.                       | ```['<', '{', '\\(', '\\[']```                                |
 | endsWith          | char[]        | Regex escaped chars that a fragment can end with.                         | ```['>', '}', '\\)', '\\]', '\\n', '\\s']```                  |
 
-You may override some or all of these options at **options.dedupe**, your options will be merged into the defaults.
-You can set **options.dedupe** to false to disable deduplication.
+You may override some or all of these options at *options.dedupe*, your options will be merged into the defaults.
+You can set *options.dedupe* to false to disable deduplication.
 
 ## Minify options
 
-Minification is performed on files that don't appear to contain binary data, aren't matched with **options.justCopy**,
-and don't contain strings in **options.skipContaining**.
+Minification is performed on files that don't appear to contain binary data, aren't matched with *options.justCopy*,
+and don't contain strings in *options.skipContaining*.
 
 Minification is performed by [HTML Minifier](https://www.npmjs.com/package/html-minifier).  It handles HTML, CSS, and JS.
 
@@ -203,8 +209,8 @@ Please see HTML Minifier's docs for a description of the options.  Here is the d
         removeStyleLinkTypeAttributes: true
     }
 ```
-You may override some or all of these options at **options.minify**, your options will be merged into the defaults.
-You can set **options.minify** to false to disable minification.
+You may override some or all of these options at *options.minify*, your options will be merged into the defaults.
+You can set *options.minify* to false to disable minification.
 
 ## Why PHP?
 
@@ -212,14 +218,14 @@ PHP is common, hosting is cheap, lots of people understand it, and syntactically
 purposes.  It seems like an ideal choice here.  However, I am open to be convinced to support another method of
 preprocessing.
 
-While we're on the subject the PHP generated here is quite basic; **Include** and **echo** statements, variable
+While we're on the subject the PHP generated here is quite basic; *Include* and *echo* statements, variable
 assignment, and string concatenation.  You should have no worries about which version of PHP to run.
 
 ## What else?
 
 You should also consider compressing your images.  Many websites do not correctly compress their images, particularly
 older websites you may be archiving.  There are several NPM packages you could use to automate this process, like
-**imagemin**.
+*imagemin*.
 
 ## Future
 
@@ -281,7 +287,7 @@ Performance in the wild varies greatly based on machine specs, file contents, an
 FYI this module currently does a lot of synchronous operations and isn't intended to run in a live production
 environment.  If there's interest to change that then that's something else that could be looked at.
 
-See the **Dedupe options** section for a better understanding of the pressure points regarding balancing performance and
+See the *Dedupe options* section for a better understanding of the pressure points regarding balancing performance and
 deduplication effectiveness, and some configuration ideas for striking the right balance for you.
 
 ## Tests
