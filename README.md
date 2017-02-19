@@ -155,7 +155,7 @@ the original text has some overhead too (6 chars for the vFile header and 6+ cha
 >
 > **1:** *26*, **2:** *936*, **3:** *33696*, **4:** *1213056* ... **n:** `36 ^ n - 10 * 36 ^ (n - 1)`
 >
-> **30+ chars for file overheads because files inside directories can have `'../'` prepended to v.php to locate the file.
+> **30+ chars for file overheads because files inside directories can have `../` prepended to the include path to locate the file.
 > The deeper the directory the more times `../` is inserted.
 >
 > Here is the full list of overheads:
