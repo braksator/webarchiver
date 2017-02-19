@@ -161,7 +161,7 @@ the original text has some overhead too (6 chars for the vFile header and 6+ cha
 > Here is the full list of overheads:
 > - 29+ char per file overhead: `<?php include 'v.php';echo ` and `';`
 > - 6+ chars in typical replacement: `'.$v.'`
-> - 3+, 4+, 5+ chars in adjacent replacement: `$v.` or `.$v.` or `.$v.'` or `'.$v.`
+> - 3+, 4+, 5+ chars in adjacent replacement: `.$v`, `$v.`, `.$v.`, `.$v.'`, or `'.$v.`
 > - 6+ chars in vFile: `$v='';`
 > - 6 char vFile header: `<?php `
 
