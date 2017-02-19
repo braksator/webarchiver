@@ -153,7 +153,7 @@ the original text has some overhead too (6 chars for the vFile header and 6+ cha
 > *The plus (+) refers to the fact that replacement variable names start out at a length of one character and
 > increase in size as the program runs, the schedule for how many variables of each length are used is as follows:
 >
-> 1: 26, 2: 936, 3: 33696, 4: 1213056 ... n: `36 ^ n - 10 * 36 ^ (n - 1)`
+> **1:** *26*, **2:** *936*, **3:** *33696*, **4:** *1213056* ... **n:** `36 ^ n - 10 * 36 ^ (n - 1)`
 >
 > (6+ chars in typical replacement: `'.$v.'` 3+ chars in adjacent replacement: `$v.` 6+ chars in vFile: `$v='';`)
 
