@@ -147,10 +147,10 @@ as a PHP string.  This works with HTML/CSS/JS files if they are set to be prepro
 
 Replacements are performed in the string by substituting portions of duplicated text with '.$var.' - where the names of
 the vars are automatically generated to be as short as possible.  Therefore each file has some overhead (28 chars), each
-replacement instance has some overhead (6+ chars*, or 3+ chars* when adjacent to another replacement), and the storage of
-the original text has some overhead too (6 chars for the vFile header and 6+ chars* per string plus the length of the string).
+replacement instance has some overhead (6+ chars\*, or 3+ chars\* when adjacent to another replacement), and the storage of
+the original text has some overhead too (6 chars for the vFile header and 6+ chars\* per string plus the length of the string).
 
-> *The plus (+) refers to the fact that replacement variable names start out at a length of one character and
+> *The + refers to the fact that replacement variable names start out at a length of one character and
 > increase in size as the program runs, the schedule for how many variables of each length are used is as follows:
 >
 > **1:** *26*, **2:** *936*, **3:** *33696*, **4:** *1213056* ... **n:** `36 ^ n - 10 * 36 ^ (n - 1)`
