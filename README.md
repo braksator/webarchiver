@@ -146,7 +146,7 @@ with a PHP include to a file with the replacement variables (*options.vFile*) an
 as a PHP string.  This works with HTML/CSS/JS files if they are set to be preprocessed by PHP on the server.
 
 Replacements are performed in the string by substituting portions of duplicated text with '.$var.' - where the names of
-the vars are automatically generated to be as short as possible.  Therefore each file has some overhead (29+ chars\*\*), each
+the vars are automatically generated to be as short as possible.  Therefore each file has some overhead (30+ chars\*\*), each
 replacement instance has some overhead (3+ to 6+ chars\*), and the storage of
 the original text has some overhead too (6 chars for the vFile header and 6+ chars\* per string plus the length of the string).
 
@@ -159,7 +159,7 @@ the original text has some overhead too (6 chars for the vFile header and 6+ cha
 > The deeper the directory the more times `../` is inserted.
 >
 > Here is the full list of overheads:
-> - 29+ char per file overhead: `<?php include 'v.php';echo ` and `';`
+> - 30+ char per file overhead: `<?php include 'v.php';echo '` and `';`
 > - 6+ chars in typical replacement: `'.$v.'`
 > - 3+, 4+, 5+ chars in adjacent replacement: `.$v`, `$v.`, `.$v.`, `.$v.'`, or `'.$v.`
 > - 6+ chars in vFile: `$v='';`
