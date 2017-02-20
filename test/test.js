@@ -5,7 +5,6 @@ var chai = require('chai');
 chai.use(require('chai-fs'));
 var expect = chai.expect;
 var assert = chai.assert;
-
 var app = require('../index');
 
 const del = require('del');
@@ -231,6 +230,45 @@ describe('#disable', function () {
 
 });
 
+
+describe('#commandLine', function () {
+
+    it('should run as a command', function (done) {
+        this.timeout(30000);
+        var dir = "test/output/single";
+
+        // First delete the dir and confirm it isn't there.
+        del.sync(dir);
+        expect(dir).to.not.be.a.path();
+
+        var exec = require('child_process').exec;
+        var cmd = 'node ./index.js --files "test/testdata/single.html" --output ' + dir;
+
+        // Act
+        exec(cmd, function(error, stdout, stderr) {
+            // Assert
+
+            // Does the output directory exist now?
+            assert.isDirectory(dir, "Is Directory");
+
+            // Does the output differ from the input?
+            var buf1 = fs.readFileSync('./test/output/single/single.html');
+            var buf2 = fs.readFileSync('./test/testdata/single.html');
+            expect(buf1.toString()).to.not.equal(buf2.toString());
+
+            // Does the output contain PHP replacements?
+            expect(buf1.toString()).to.include("<?php");
+            expect(buf1.toString()).to.include("'.$");
+
+            done();
+
+        });
+
+    });
+
+});
+
+
 describe('#webArchiver', function () {
 
     it('should throw an error when no options given', function () {
@@ -418,7 +456,10 @@ describe('#webArchiver', function () {
         var options = {
             files: "test/testdata/double*",
             noProgress: true,
-            output: dir
+            output: dir,
+            dedupe: {
+                minLength: 0
+            }
         };
 
         // Act
@@ -446,11 +487,13 @@ describe('#webArchiver', function () {
         var options = {
             files: ["test/testdata/multiple*"],
             output: dir,
-            passes: 5,
-            noProgress: true,
+            passes: 3,
             slugify: true,
+            slugifyIgnore: ['gaters.net -'],
+            searchReplace: { search: ['http://162.244.93.21/~gatersne/vbdec2002/'], replace: ['#']},
             dedupe: {
-                minLength: 20
+                minLength: 20,
+                minOcc: 3
             }
         };
 

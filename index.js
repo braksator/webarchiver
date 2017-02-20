@@ -327,14 +327,23 @@ var webarchiver = {};
          * Determines whether to allow the current duplicate to be replaced in files.
          *
          * The implementation of this function should remain ignorant of which string/file the replacement is being applied
-         * to as its result is reused for other files without calling this function again.  Though it can consider
-         * match.occ.length which gives the number of occurrences.
+         * to as its result is reused for other files without calling this function again.
          *
          * @param match Object containing information about the deduplication match.
          * @returns {boolean}
          */
         replacementAllowed: function (match) {
-            return match.str.length >= this.autoMinLength();
+            var occSatisfied = true;
+            if (this.options.dedupe.minOcc) {
+                var occurrences = 0;
+                for (var i in match.occ) {
+                    if (match.occ.hasOwnProperty(i)) {
+                        occurrences += match.occ[i].length;
+                    }
+                }
+                occSatisfied = occurrences >= this.options.dedupe.minOcc;
+            }
+            return occSatisfied && match.str.length >= this.autoMinLength();
         },
 
         // Generates an automatic value for minLength based on minSaving and the length of the current shortCode.
@@ -647,10 +656,11 @@ var webarchiver = {};
             if (this.options.searchReplace) {
                 var a = this.options.searchReplace.search;
                 var b = this.options.searchReplace.replace;
-                str.replace(new RegExp(a.map(function(x) {
+                var i = this.options.searchReplace.i ? 'i' : '';
+                str = str.replace(new RegExp(a.map(function(x) {
                     return x.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-                }).join('|'), 'g'), function(c) {
-                    str = b[a.indexOf(c)];
+                }).join('|'), 'g' + i), function(c) {
+                    return b[a.indexOf(c)];
                 });
             }
 
@@ -660,6 +670,7 @@ var webarchiver = {};
     };
 
     // This is for command line usage.
+    /* istanbul ignore next */
     if (!module.parent) {
         // Grab command line args.
         var commandLineArgs = require('command-line-args');

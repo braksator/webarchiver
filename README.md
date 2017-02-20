@@ -132,7 +132,7 @@ You may override some or all of these options.
 | disable           | array         | Crude form element disabler, pass in something like `['button', 'input', 'options', 'select', 'textarea']`.               |               |
 | slugify           | bool          | Converts filenames of text files that contain an HTML title tag to SEO friendly slugs based on the title.                 |               |
 | slugifyIgnore     | array         | Array of strings to ignore from titles in the slugify process.  See *Extra features* section.                             |               |
-| searchReplace     | object        | Custom search/replace to perform, e.g { search: ['chairman', 'cop'], replace: ['chairperson', 'police officer'] }         |               |
+| searchReplace     | object        | Custom search/replace to perform, e.g { search: ['chairman', 'cop'], replace: ['chairperson', 'police officer'], i: true }|               |
 
 ## Dedupe options
 
@@ -192,6 +192,7 @@ options object contains configuration for additional deduplication behavior.
 | Option name       | Type          | Description                                                               | Default                                                       |
 | ---               | ---           | ---                                                                       |---                                                            |
 | minLength         | int           | The minimum length a string of text must be to deduplicate. (0 = auto)    | 20                                                            |
+| minOcc            | int           | The minimum number of occurrences a duplicate must have to use it.        |                                                               |
 | minSaving         | int           | The minimum length of string minus the replacement instance overhead      | 10                                                            |
 | startsWith        | char[]        | Regex escaped chars that a fragment can start with.                       | ```['<', '{', '\\(', '\\[']```                                |
 | endsWith          | char[]        | Regex escaped chars that a fragment can end with.                         | ```['>', '}', '\\)', '\\]', '\\n', '\\s']```                  |
@@ -250,8 +251,8 @@ and 'via', 'with'.  More likely you'll want to use this to remove the title of y
 The option *options.searchReplace* will let you perform custom replaces on text files.  An example use is that if there
 are hardcoded links to your old site, or temporary site from which the static files were pulled from, which point to
 files that weren't downloaded, they can be nullified.  E.g. You have links `http://134.23.12.200/~tempsite/search.php`
-which doesn't exist now so supply `{ find: ['http://134.23.12.200/~tempsite/'], replace: ['#'] }` and the link becomes
-`#search.php` which stops that link from going to a blank page.
+which doesn't exist now so supply `{ find: ['http://134.23.12.200/~tempsite/'], replace: ['#'], i: true }` and the link
+ ecomes `#search.php` which stops that link from going to a blank page.  The 'i' key is a bool for case insensitivity.
 
 
 ## Why PHP?
@@ -284,8 +285,6 @@ revisited but not a high priority.
 + Right now when a match is found it gets used, even though it might be a subset of a longer match in another file.  It
 would be possible to perform a full analysis of the files first before deciding which replacements to use.  I suspect
 the current algorithm's behavior to match the first file against itself first is also a detriment in choosing matches.
-+ When deciding if a replacement is allowed (i.e. replacementAllowed()), this module does not take into consideration
-the number of occurrences of the duplicate (this data can be divined from match.occ) - it certainly could!
 
 ## BTW...
 
