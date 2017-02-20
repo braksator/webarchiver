@@ -231,11 +231,14 @@ You can set *options.minify* to false to disable minification.
 ## Extra features
 
 The module contains some quick and dirty features disabled by default which I needed for practical purposes, so someone
-else might want them too.
+else might want them too. The features are all based on regex's, and along with minification the string changes are
+executed from the function `manipulations` prior to any deduplication.
 
-The option *options.disable* lets you pass in some tag names to which a *disable* attribute should be added, this is
+### Disable
+The option *options.disable* lets you pass in some tag names to which a *disabled* attribute should be added, this is
 intended to disable form elements.
 
+### Slugify
 The option *options.slugify* will convert filenames to more SEO friendly slugs based on the title tag. Additionally
 the option *options.slugifyIgnore* lets you pass in an array of strings to ignore from the title, it's common practice
 (although some argue it may hurt SEO) to remove words like: 'a', 'an', 'as', 'at', 'before', 'but', 'by', 'for', 'from',
@@ -243,14 +246,13 @@ the option *options.slugifyIgnore* lets you pass in an array of strings to ignor
 and 'via', 'with'.  More likely you'll want to use this to remove the title of your website from the filenames, e.g.
 `[' - mySite.com']`.
 
+### Search/Replace
 The option *options.searchReplace* will let you perform custom replaces on text files.  An example use is that if there
 are hardcoded links to your old site, or temporary site from which the static files were pulled from, which point to
 files that weren't downloaded, they can be nullified.  E.g. You have links http://134.23.12.200/~tempsite/search.php
 which doesn't exist now so supply `{ find: ['http://134.23.12.200/~tempsite/'], replace: ['#'] }` and the link becomes
 #search.php which stops that link from going to a blank page.
 
-The features are all based on regex's, and along with minification the string changes are executed from the function
-`manipulations`.
 
 ## Why PHP?
 
