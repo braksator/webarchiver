@@ -258,6 +258,7 @@ would be possible to perform a full analysis of the files first before deciding 
 the current algorithm's behaviour to match the first file against itself first is also a detriment in choosing matches.
 + When deciding if a replacement is allowed (i.e. replacementAllowed()), this module does not take into consideration
 the number of occurrences of the duplicate (this data can be divined from match.occ) - it certainly could!
++ Disable form elements.
 
 ## BTW...
 
