@@ -642,16 +642,6 @@ var webarchiver = {};
                 str = this.minify(str);
             }
 
-            // Disable form elements.
-            if (this.options.disable) {
-                str = this.disable(str);
-            }
-
-            // Alter references to altered filenames.
-            if (this.options.slugify) {
-                str = this.slugifyReplace(str);
-            }
-
             // Search and replace.
             if (this.options.searchReplace) {
                 var a = this.options.searchReplace.search;
@@ -662,6 +652,16 @@ var webarchiver = {};
                 }).join('|'), 'g' + i), function(c) {
                     return b[a.indexOf(c)];
                 });
+            }
+
+            // Disable form elements.
+            if (this.options.disable) {
+                str = this.disable(str);
+            }
+
+            // Alter references to altered filenames.
+            if (this.options.slugify) {
+                str = this.slugifyReplace(str);
             }
 
             return str;
