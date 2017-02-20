@@ -231,9 +231,10 @@ You can set *options.minify* to false to disable minification.
 
 ## Extra features
 
-The module contains some quick and dirty features disabled by default which I needed for practical purposes, so someone
-else might want them too. The features are all based on regex's, and along with minification the string changes are
-executed from the function `manipulations` prior to any deduplication.
+The module contains some quick and dirty features disabled by default which I needed for practical purposes to be able to
+configure the processing job to perform a few additional tasks on the files, so someone else might want them too. The
+features are all based on regex's, and along with minification the string changes are executed from the function
+`manipulations` prior to any deduplication.
 
 ### Disable
 The option *options.disable* lets you pass in some tag names to which a *disabled* attribute should be added, this is
@@ -252,7 +253,7 @@ The option *options.searchReplace* will let you perform custom replaces on text 
 are hardcoded links to your old site, or temporary site from which the static files were pulled from, which point to
 files that weren't downloaded, they can be nullified.  E.g. You have links `http://134.23.12.200/~tempsite/search.php`
 which doesn't exist now so supply `{ find: ['http://134.23.12.200/~tempsite/'], replace: ['#'], i: true }` and the link
- ecomes `#search.php` which stops that link from going to a blank page.  The 'i' key is a bool for case insensitivity.
+becomes `#search.php` which stops that link from going to a blank page.  The 'i' key is a bool for case insensitivity.
 
 
 ## Why PHP?
