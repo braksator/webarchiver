@@ -103,14 +103,14 @@ For dedupe and minify values just use a dot, e.g.: `--dedupe.minLength 20`
 ## Customization
 
 This module exports all of its functions so you can potentially overwrite some parts of it! Some interesting ones are
-`replacementAllowed` which lets you reject a deduplication match, and `varCode` which can alter the variable name used
-in the PHP output.  Simply use `wa.functionName = function() { // your new code here };` before using `wa.webArchiver...`
-to overwrite functions.  Similarly any variables used like `this.variableName` can be altered with
-`wa.variableName = [your value];`.
+`replacementAllowed` which lets you reject a deduplication match, `varCode` which can alter the variable name used
+in the PHP output, and `manipulations` to perform one-time string manipulations.  Simply use
+`wa.functionName = function() { // your new code here };` before using `wa.webArchiver...` to overwrite functions.  Similarly
+any variables used like `this.variableName` can be altered with `wa.variableName = [your value];`.
 
 If you just want the deduplicator logic you'll probably want to look at `createFragments` for preparing the string into
 a fragment array, `fragmentMatches` for finding duplicates (and look at how its used by `findDuplicates`), and `doReplace`
-for performing replacements on a fragment array (or use `replaceAll` with a string escaped with `escapeRegExp`).
+for performing replacements on a fragment array (or use `replaceAll` with a string).
 
 ## Options
 
@@ -120,16 +120,19 @@ You may override some or all of these options.
 | ---               | ---           | ---                                                                                                                       |---            |
 | files             | string/array  | A glob pattern that indicates which files to process and output, or an array of glob patterns.                            |               |
 | output            | string        | The path of an output directory (doesn't need to exist yet) if options.inPlace is not used.                               |               |
-| justCopy          | string/array  | Glob pattern(s) of files (that are also found in 'files') to not process with compression but still output.               | false         |
-| inPlace           | bool          | If set to true will modify the existing files rather than creating new files.  Not recommended.                           | false         |
-| dedupe            | object/false  | Options to override deduplication behaviour (or set to false to not deduplicate - why would you?).                        | (See below)   |
-| minify            | object/false  | Options to override minification behaviour as per the html-minifier package (or set to false to not minify).              | (See below)   |
+| justCopy          | string/array  | Glob pattern(s) of files (that are also found in 'files') to not process with compression but still output.               |               |
+| inPlace           | bool          | If set to true will modify the existing files rather than creating new files.  Not recommended.                           |               |
+| dedupe            | object/false  | Options to override deduplication behavior (or set to false to not deduplicate).                                          | (See below)   |
+| minify            | object/false  | Options to override minification behavior as per the html-minifier package (or set to false to not minify).               | (See below)   |
 | vFile             | string        | The name of the PHP variables file if 'v.php' is not acceptable.                                                          | 'v.php'       |
-| fullNest          | bool          | Whether to nest the full input path into the output directory.  You shouldn't need this in most cases.                    | false         |
+| fullNest          | bool          | Whether to nest the full input path into the output directory.  You shouldn't need this in most cases.                    |               |
 | skipContaining    | bool          | An array of strings; if a text file contains any of them the file will be treated as though it was matched in justCopy.   | ['<?']        |
-| noProgress        | bool          | Set to true to disable the progress bar.                                                                                  | false         |
+| noProgress        | bool          | Set to true to disable the progress bar.                                                                                  |               |
 | passes            | int           | Number of deduplication passes.  Often things are missed on first pass.  Can increase for extra dedupe checks.            | 2             |
-
+| disable           | array         | Crude form element disabler, pass in something like `['button', 'input', 'options', 'select', 'textarea']`.               |               |
+| slugify           | bool          | Converts filenames of text files with a <title> HTML tag to SEO friendly slugs based on the title.                        |               |
+| slugifyIgnore     | array         | Array of strings to ignore from titles in the slugify process.  See *Extra features* section.                             |               |
+| searchReplace     | object        | Custom search/replace to perform, e.g { search: ['chairman', 'cop'], replace: ['chairperson', 'police officer'] }         |               |
 
 ## Dedupe options
 
@@ -225,6 +228,30 @@ Please see HTML Minifier's docs for a description of the options.  Here is the d
 You may override some or all of these options at *options.minify*, your options will be merged into the defaults.
 You can set *options.minify* to false to disable minification.
 
+## Extra features
+
+The module contains some quick and dirty features disabled by default which I needed for practical purposes, so someone
+else might want them too.
+
+The option *options.disable* lets you pass in some tag names to which a *disable* attribute should be added, this is
+intended to disable form elements.
+
+The option *options.slugify* will convert filenames to more SEO friendly slugs based on the title tag. Additionally
+the option *options.slugifyIgnore* lets you pass in an array of strings to ignore from the title, it's common practice
+(although some argue it may hurt SEO) to remove words like: 'a', 'an', 'as', 'at', 'before', 'but', 'by', 'for', 'from',
+ 'is', 'in', 'into', 'like', 'of', 'off', 'on', 'onto', 'per', 'since', 'than', 'the', 'this', 'that', 'to', 'up',
+and 'via', 'with'.  More likely you'll want to use this to remove the title of your website from the filenames, e.g.
+`[' - mySite.com']`.
+
+The option *options.searchReplace* will let you perform custom replaces on text files.  An example use is that if there
+are hardcoded links to your old site, or temporary site from which the static files were pulled from, which point to
+files that weren't downloaded, they can be nullified.  E.g. You have links http://134.23.12.200/~tempsite/search.php
+which doesn't exist now so supply `{ find: ['http://134.23.12.200/~tempsite/'], replace: ['#'] }` and the link becomes
+#search.php which stops that link from going to a blank page.
+
+The features are all based on regex's, and along with minification the string changes are executed from the function
+`manipulations`.
+
 ## Why PHP?
 
 PHP is common, hosting is cheap, lots of people understand it, and syntactically it is quite succinct for our
@@ -240,25 +267,23 @@ You should also consider compressing your images.  Many websites do not correctl
 older websites you may be archiving.  There are several NPM packages you could use to automate this process, like
 *imagemin*.
 
+If you want to add custom HTML/JS/CSS to the files, for example to display a header that says "This is an archive" and
+link back to your site, etc... You could override the prepend/append functions, or use *auto_prepend_file*/*auto_append_file*
+[directives in php.ini](http://php.net/manual/en/ini.core.php).
+
 ## Future
 
 I have some more ideas for this package which I may pursue:
 
 + Pull down remote websites to archive.  Currently it only works on static files you already have.
-+ Rename files (and links to those files) based on title tag.  Would be a bonus for SEO.
-+ Option to serve files through an index.php instead of accessing directly.  This would allow you to modify the index
-file to add additional prepended/appended PHP/HTML, custom CSS, and custom scripts across all of the files.
 + Extract contents of style and script tags into separate files.  This would allow them to be cached client-side.
 + I wanted to support image compression out of the box, but that proved more time-consuming than I'd hoped, could be
 revisited but not a high priority.
-+ Possibly batching/resuming, or adding more files later should be supported.  I'm less enthusiastic about this idea
-than I was previously.
 + Right now when a match is found it gets used, even though it might be a subset of a longer match in another file.  It
 would be possible to perform a full analysis of the files first before deciding which replacements to use.  I suspect
-the current algorithm's behaviour to match the first file against itself first is also a detriment in choosing matches.
+the current algorithm's behavior to match the first file against itself first is also a detriment in choosing matches.
 + When deciding if a replacement is allowed (i.e. replacementAllowed()), this module does not take into consideration
 the number of occurrences of the duplicate (this data can be divined from match.occ) - it certainly could!
-+ Disable form elements.
 
 ## BTW...
 

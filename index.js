@@ -17,18 +17,7 @@ var webarchiver = {};
 
         /**node
          * The main webarchiver function.
-         * @param {object} options - The options.
-         * @param {string|array} options.files - A glob pattern that indicates which files to process, or an array of glob strings.
-         * @param {string|array} options.justCopy - Glob string/array of files to not process.
-         * @param {bool} options.inPlace - If set to true will modify the existing files rather than creating new files.
-         * @param {string} options.output - The path of an output directory if options.inPlace is not used.
-         * @param {object|false} options.dedupe - Options to override deduplication behaviour (or set to false to not deduplicate).
-         * @param {object|false} options.minify - Options to override minification behaviour as per the html-minifier package (or set to false to not minify).
-         * @param {string} options.vFile - The name of the php variables file if 'v.php' is not acceptable.
-         * @param {bool} options.fullNest - Whether to maintain full path nesting in the output directory - defaults to false.
-         * @param {array} options.skipContaining - An array of strings, if a text file contains any of them it will be 'just copied'. Default is ['<?'].
-         * @param {bool} options.noProgress - Set to true to remove the progress bar.
-         * @param {int} options.passes - Number of deduplication passes over the files.  Defaults to 2.
+         * @param {object} options - The options object.
          */
         webArchiver: function (options) {
             // Check that there are options.
@@ -62,6 +51,11 @@ var webarchiver = {};
 
             // Where to output the files.
             this.outDir = this.getOutDir();
+
+            // Create tracking for altered filenames so they don't get reused.
+            if (this.options.slugify) {
+                this.slugMap = {};
+            }
 
             // The first variable name to use.
             this.varName = 'a';
@@ -118,11 +112,15 @@ var webarchiver = {};
 
         progressBar: function () {
             if (!this.options.noProgress) {
+                var additional = this.numFiles + 1;
+                if (this.options.slugify) {
+                    additional += this.numFiles;
+                }
                 this.bar = new ProgressBar('  Archiving [:bar] :percent :msg ETA: :eta sec', {
                     width: 50,
                     // This is a 1+2+3+4... formula multiplied by passes plus numFiles to write out the files plus one
                     // extra tick for writing the vfile.
-                    total: ((this.numFiles * (this.numFiles + 1)) / 2) * this.options.passes + this.numFiles + 1
+                    total: ((this.numFiles * (this.numFiles + 1)) / 2) * this.options.passes + additional
                 });
             }
             else {
@@ -134,62 +132,101 @@ var webarchiver = {};
             }
         },
 
-        // File processing function.
-        processFiles: function () {
-            for (var pass = 0; pass < this.options.passes; ++pass) {
-                for (var fileKey = 0; fileKey < this.numFiles; ++fileKey) {
-                    if (pass == 0) {
-                        // Create tracking object for this file.
-                        this.files[fileKey] = {
-                            path: this.inPaths[fileKey].substr(this.startPathLength),
-                            skip: this.justCopy.indexOf(this.inPaths[fileKey]) > -1
-                        };
-                        // Output path.
-                        this.files[fileKey].outPath = this.outDir + this.files[fileKey].path;
-                    }
+        // Create tracking object for a file.
+        createFileTrack: function (fileKey) {
+            this.files[fileKey] = {
+                path: this.inPaths[fileKey].substr(this.startPathLength),
+                skip: this.justCopy.indexOf(this.inPaths[fileKey]) > -1,
+                textFile: true
+            };
+            // Output path.
+            this.files[fileKey].outPath = this.outDir + this.files[fileKey].path;
+        },
 
-                    if (!this.files[fileKey].skip && fs.lstatSync(this.inPaths[fileKey]).isDirectory()) {
-                        // Directory.
+        // Check and handle directories and binary files.
+        handleDirsAndBinaries: function (fileKey) {
+            if (!this.files[fileKey].skip) {
+                if (fs.lstatSync(this.inPaths[fileKey]).isDirectory()) {
+                    // Directory.
 
-                        // So it isn't used as an 'other' file in dedupes and fs.lstatSync isn't run on the 2nd pass.
-                        this.files[fileKey].skip = true;
-                    }
-                    else if (!this.files[fileKey].skip && isBinaryFile.sync(this.inPaths[fileKey])) {
-                        // Process binary files.
+                    // So it isn't used as an 'other' file in dedupes and fs.lstatSync isn't run on the 2nd pass.
+                    this.files[fileKey].skip = true;
+                    this.files[fileKey].textFile = false;
+                }
+                else if (isBinaryFile.sync(this.inPaths[fileKey])) {
+                    // Process binary files.
+                    if (this.inPaths[fileKey] != this.files[fileKey].outPath) {
                         // Ensure the output dir exists.
                         mkdirp.sync(path.dirname(this.files[fileKey].outPath));
 
-                        if (this.inPaths[fileKey] != this.files[fileKey].outPath) {
-                            // Copy the file over.
-                            var file = fs.readFileSync(this.inPaths[fileKey], 'binary');
-                            fs.writeFileSync(this.files[fileKey].outPath, file, 'binary');
-                        }
-                        // So it isn't used as an 'other' file in dedupes and isBinaryFile isn't run on the 2nd pass.
-                        this.files[fileKey].skip = true;
+                        // Copy the file over.
+                        var file = fs.readFileSync(this.inPaths[fileKey], 'binary');
+                        fs.writeFileSync(this.files[fileKey].outPath, file, 'binary');
                     }
-                    else {
+                    // So it isn't used as an 'other' file in dedupes and isBinaryFile isn't run on the 2nd pass.
+                    this.files[fileKey].skip = true;
+                    this.files[fileKey].textFile = false;
+                }
+            }
+        },
+
+        // Determine additional skip conditions based on the contents of the file.
+        determineTextFileSkip: function (fileKey, str) {
+            if (!this.files[fileKey].skip) {
+                for (var j = 0; j < this.options.skipContaining.length; ++j) {
+                    if (str.indexOf(this.options.skipContaining[j]) > -1) {
+                        this.files[fileKey].skip = true;
+                        break;
+                    }
+                }
+            }
+        },
+
+        // File processing function.
+        processFiles: function () {
+
+            // Alter the filename.
+            if (this.options.slugify) {
+                // @todo: When adding a feature for pre-analysis of files, include it in this loop.
+                for (var fileKey = 0; fileKey < this.numFiles; ++fileKey) {
+                    this.createFileTrack(fileKey);
+                    this.handleDirsAndBinaries(fileKey);
+                    if (!this.files[fileKey].skip) {
+                        var str = fs.readFileSync(this.inPaths[fileKey], 'utf8');
+                        // Work out slugs.
+                        this.slugify(fileKey, str);
+                        if (this.options.inPlace) {
+                            // Rename.
+                            fs.renameSync(this.files[fileKey].path, this.files[fileKey].outPath);
+                        }
+                    }
+
+                    this.bar.tick(1, {'msg': 'File ' + (fileKey + 1) + '/' + this.numFiles + ' (analyzing)'});
+                }
+            }
+
+            for (var pass = 0; pass < this.options.passes; ++pass) {
+                for (var fileKey = 0; fileKey < this.numFiles; ++fileKey) {
+                    if (pass == 0 && !this.options.slugify) {
+                        this.createFileTrack(fileKey);
+                        this.handleDirsAndBinaries(fileKey);
+                    }
+
+                    if (this.files[fileKey].textFile) {
                         // Process text files.
                         var str;
                         if (pass == 0) {
                             // Read the file contents.
                             str = fs.readFileSync(this.inPaths[fileKey], 'utf8');
-
                             // Determine additional skip conditions based on the contents of the file.
-                            if (!this.files[fileKey].skip) {
-                                for (var j = 0; j < this.options.skipContaining.length; ++j) {
-                                    if (str.indexOf(this.options.skipContaining[j]) > -1) {
-                                        this.files[fileKey].skip = true;
-                                        break;
-                                    }
-                                }
-                            }
+                            this.determineTextFileSkip(fileKey, str);
                         }
 
                         // Ensure it's not a file to skip.
                         if (!this.files[fileKey].skip) {
-                            // Minify the file contents.
-                            if (pass == 0 && this.options.minify !== false) {
-                                str = this.minify(str);
+                            if (pass == 0) {
+                                // One-time string manipulations.
+                                str = this.manipulations(fileKey, str);
                             }
 
                             if (this.options.dedupe !== false) {
@@ -534,6 +571,90 @@ var webarchiver = {};
         // Minify function.
         minify: function (str) {
             return minify(str, this.options.minify);
+        },
+
+        // Crude form element disabler.
+        disable: function (str) {
+            var find = [];
+            var replace = [];
+            for (var d = 0; d < this.options.disable.length; ++d) {
+                find.push('<' + this.options.disable[d]);
+                replace.push('<' + this.options.disable[d] + ' disabled');
+            }
+            return str.replace(new RegExp(find.join('|'), 'g'), function(tagOpen) {
+                return replace[find.indexOf(tagOpen)];
+            });
+        },
+
+        // Get the slugified title.
+        slugifySlug: function (str) {
+            var title = str.match(/<title[^>]*>([^<]+)<\/title>/)[1];
+            if (title != '') {
+                if (this.options.slugifyIgnore) {
+                    title = title.replace(new RegExp(this.options.slugifyIgnore.join('|'), 'ig'), '');
+                }
+                if (title != '') {
+                    return title.toLowerCase().trim().replace(/ /g, '-').replace(/[^\w-]+/g, '');
+                }
+            }
+            return false;
+        },
+
+        // Alter the filename.
+        slugify: function (fileKey, str) {
+            this.files[fileKey].originalPath = this.files[fileKey].path;
+            var fileExt = this.files[fileKey].path.substr(this.files[fileKey].path.lastIndexOf('.'));
+            var basePath = this.files[fileKey].path.substr(0, this.files[fileKey].path.lastIndexOf('/') + 1);
+            var slug = this.slugifySlug(str);
+            if (slug !== false) {
+                var disambiguate = 2;
+                var changed_slug = slug + fileExt;
+                while (changed_slug in this.slugMap) {
+                    changed_slug = slug + '-' + disambiguate + fileExt;
+                }
+                slug = changed_slug;
+                this.files[fileKey].alteredPath = basePath + slug;
+                this.files[fileKey].outPath = this.outDir + this.files[fileKey].alteredPath;
+                this.slugMap[basePath + slug] = this.files[fileKey].path;
+            }
+        },
+
+        slugifyReplace: function(str) {
+            for (var slug in this.slugMap) {
+                str = this.replaceAll(str, this.slugMap[slug], slug);
+            }
+            return str;
+        },
+
+        // Custom string manipulation.
+        manipulations: function(fileKey, str) {
+            // Minify the file contents.
+            if (this.options.minify) {
+                str = this.minify(str);
+            }
+
+            // Disable form elements.
+            if (this.options.disable) {
+                str = this.disable(str);
+            }
+
+            // Alter references to altered filenames.
+            if (this.options.slugify) {
+                str = this.slugifyReplace(str);
+            }
+
+            // Search and replace.
+            if (this.options.searchReplace) {
+                var a = this.options.searchReplace.search;
+                var b = this.options.searchReplace.replace;
+                str.replace(new RegExp(a.map(function(x) {
+                    return x.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+                }).join('|'), 'g'), function(c) {
+                    str = b[a.indexOf(c)];
+                });
+            }
+
+            return str;
         }
 
     };

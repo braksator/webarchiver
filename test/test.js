@@ -217,6 +217,20 @@ describe('#nextVarName', function () {
 
 });
 
+
+describe('#disable', function () {
+
+    it('should disable form elements', function () {
+        var html = '<form><input type="text" /><textarea></textarea><input type="submit" value="go" /></form>';
+        app.options = { disable: ['button', 'input', 'options', 'select', 'textarea']};
+
+        var res = app.disable(html);
+        expect(res).to.equal('<form><input disabled type="text" /><textarea disabled></textarea><input disabled type="submit" value="go" /></form>');
+        app.options.disable = false;
+    });
+
+});
+
 describe('#webArchiver', function () {
 
     it('should throw an error when no options given', function () {
@@ -434,6 +448,7 @@ describe('#webArchiver', function () {
             output: dir,
             passes: 5,
             noProgress: true,
+            slugify: true,
             dedupe: {
                 minLength: 20
             }
