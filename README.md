@@ -251,7 +251,7 @@ The option *options.searchReplace* will let you perform custom replaces on text 
 are hardcoded links to your old site, or temporary site from which the static files were pulled from, which point to
 files that weren't downloaded, they can be nullified.  E.g. You have links http://134.23.12.200/~tempsite/search.php
 which doesn't exist now so supply `{ find: ['http://134.23.12.200/~tempsite/'], replace: ['#'] }` and the link becomes
-#search.php which stops that link from going to a blank page.
+\#search.php which stops that link from going to a blank page.
 
 
 ## Why PHP?
