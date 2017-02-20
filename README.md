@@ -130,7 +130,7 @@ You may override some or all of these options.
 | noProgress        | bool          | Set to true to disable the progress bar.                                                                                  |               |
 | passes            | int           | Number of deduplication passes.  Often things are missed on first pass.  Can increase for extra dedupe checks.            | 2             |
 | disable           | array         | Crude form element disabler, pass in something like `['button', 'input', 'options', 'select', 'textarea']`.               |               |
-| slugify           | bool          | Converts filenames of text files with an HTML title tag to SEO friendly slugs based on the title.                        |               |
+| slugify           | bool          | Converts filenames of text files that contain an HTML title tag to SEO friendly slugs based on the title.                 |               |
 | slugifyIgnore     | array         | Array of strings to ignore from titles in the slugify process.  See *Extra features* section.                             |               |
 | searchReplace     | object        | Custom search/replace to perform, e.g { search: ['chairman', 'cop'], replace: ['chairperson', 'police officer'] }         |               |
 
