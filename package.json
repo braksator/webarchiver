@@ -2,6 +2,17 @@
   "name": "webarchiver",
   "version": "3.0.4",
   "description": "Deduplicates and compresses a directory of website files and the result uses PHP.",
+  "keywords": [
+    "dedupe",
+    "deduplicate",
+    "deduplication",
+    "compress",
+    "compression",
+    "html",
+    "php",
+    "archive",
+    "archiving"
+  ],
   "main": "index.js",
   "scripts": {
     "test": "mocha --reporter spec",
