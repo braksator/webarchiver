@@ -245,7 +245,7 @@ The option *options.slugify* will convert filenames to more SEO friendly slugs b
 the option *options.slugifyIgnore* lets you pass in an array of strings to ignore from the title, it's common practice
 (although some argue it may hurt SEO) to remove words like: 'a', 'an', 'as', 'at', 'before', 'but', 'by', 'for', 'from',
  'is', 'in', 'into', 'like', 'of', 'off', 'on', 'onto', 'per', 'since', 'than', 'the', 'this', 'that', 'to', 'up',
-and 'via', 'with'.  More likely you'll want to use this to remove the title of your website from the filenames, e.g.
+'via', and 'with'.  More likely you'll want to use this to remove the title of your website from the filenames, e.g.
 `[' - mySite.com']`.
 
 ### Search/Replace
