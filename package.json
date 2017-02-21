@@ -27,7 +27,6 @@
   },
   "dependencies": {
     "command-line-args": "^4.0.1",
-    "del": "^2.2.2",
     "globby": "^6.1.0",
     "html-minifier": "^3.3.1",
     "isbinaryfile": "^3.0.2",
@@ -39,6 +38,7 @@
   "devDependencies": {
     "chai": "^3.5.0",
     "chai-fs": "^1.0.0",
+    "del": "^2.2.2",
     "fs-extra": "^2.0.0",
     "get-folder-size": "^1.0.0",
     "istanbul": "^0.4.5",

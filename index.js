@@ -5,7 +5,6 @@ var fs = require('fs');
 var globby = require('globby');
 var minify = require('html-minifier').minify;
 var mkdirp = require('mkdirp');
-var del = require('del');
 var mergeOptions = require('merge-options');
 var isBinaryFile = require("isbinaryfile");
 var path = require('path');
