@@ -254,7 +254,7 @@ that still point to old locations.
 
 ```javascript
     searchReplace: {
-        find: ['http://142.244.93.22/~tempsite/dir/', 'showthread.php?t', 'forumdisplay.php?f', 'http://www.example.com/'],
+        search: ['http://142.244.93.22/~tempsite/dir/', 'showthread.php?t', 'forumdisplay.php?f', 'http://www.example.com/'],
         replace: ['', 'showthread.php@t', 'forumdisplay.php@f', ''],
         i: true
     },
