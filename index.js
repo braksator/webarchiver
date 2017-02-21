@@ -73,6 +73,7 @@ var webarchiver = {};
             // Write the PHP vfile.
             this.createVarFile();
 
+            // Write the app state.
             if (this.options.writeState) {
                 var out = {};
                 for (var x in this) {
