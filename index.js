@@ -620,6 +620,7 @@ var webarchiver = {};
                 var changed_slug = slug + fileExt;
                 while (changed_slug in this.slugMap) {
                     changed_slug = slug + '-' + disambiguate + fileExt;
+                    disambiguate++;
                 }
                 slug = changed_slug;
                 this.files[fileKey].alteredPath = basePath + slug;
