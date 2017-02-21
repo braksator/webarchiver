@@ -179,7 +179,7 @@ considered in their 6+ form even if they are adjacent replacements.  This behavi
 Due to the overhead it is advisable to not choose a particularly small value for *options.dedupe.minSaving*.
 Setting *options.dedupe.minLength* to higher values will also speed up the algorithm, whereas using 0 will automatically
 calculate it each time based on minSaving and the 6+ typical replacement overhead (other overhead and occurrences are not
-factored in - you compensate for those by setting minSaving and minOcc high enough).  Setting minLength to greater than
+factored in - you compensate for those by setting minSaving and/or minOcc high enough).  Setting minLength to greater than
 0 but less than minSaving + 6 is a poor choice for computing efficiency. Bottom line though; both minLength and minSaving
 will be enforced no matter what you do here.
 
