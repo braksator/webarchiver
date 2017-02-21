@@ -173,8 +173,8 @@ Tip: You could be clever and cut out some overhead by using the *auto_prepend_fi
 [directives in php.ini](http://php.net/manual/en/ini.core.php) then overriding the functions *append*, *prepend*, and
 perhaps *createVarFile* in this module to work with your system.
 
-Note: Further deduplication can happen to already deduplicated data, in this case the replacement will be considered in
-its 6+ form even if it is an adjacent replacement.  This behavior seems desirable to me.
+Note: Further deduplication can happen that includes already deduplicated data, in this case replacements will be
+considered in their 6+ form even if they are adjacent replacements.  This behavior seems desirable to me.
 
 Due to the overhead it is advisable to not choose a particularly small value for *options.dedupe.minSaving*.
 Setting *options.dedupe.minLength* to higher values will also speed up the algorithm, whereas using 0 will automatically
