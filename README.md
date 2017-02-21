@@ -133,6 +133,7 @@ You may override some or all of these options.
 | slugify           | bool          | Converts filenames of text files that contain an HTML title tag to SEO friendly slugs based on the title.                 |               |
 | slugifyIgnore     | array         | Array of strings to ignore from titles in the slugify process.  See *Extra features* section.                             |               |
 | searchReplace     | object        | Custom search/replace to perform, e.g { search: ['chairman', 'cop'], replace: ['chairperson', 'police officer'], i: true }|               |
+| writeState        | bool          | Creates a file (state.json) at the end of processing containing the module's state (values of variables).                 |               |
 
 ## Dedupe options
 

@@ -73,6 +73,16 @@ var webarchiver = {};
             // Write the PHP vfile.
             this.createVarFile();
 
+            if (this.options.writeState) {
+                var out = {};
+                for (var x in this) {
+                    if (this.hasOwnProperty(x) && typeof(x) != 'function') {
+                        out[x] = this.x;
+                    }
+                }
+                require('jsonfile').writeFileSync(this.outDir + 'state.json', out);
+            }
+
             // Saved one tick for the end.
             this.bar.tick(1, {'msg': 'Files processed, completing job...'});
 

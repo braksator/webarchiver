@@ -491,6 +491,7 @@ describe('#webArchiver', function () {
             slugify: true,
             slugifyIgnore: ['gaters.net -'],
             searchReplace: { search: ['http://162.244.93.21/~gatersne/vbdec2002/'], replace: ['#']},
+            writeState: true,
             dedupe: {
                 minLength: 20,
                 minOcc: 3
