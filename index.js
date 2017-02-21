@@ -76,8 +76,8 @@ var webarchiver = {};
             if (this.options.writeState) {
                 var out = {};
                 for (var x in this) {
-                    if (this.hasOwnProperty(x) && typeof(x) != 'function') {
-                        out[x] = this.x;
+                    if (this.hasOwnProperty(x) && typeof(this[x]) != 'function' && x != 'bar') {
+                        out[x] = this[x];
                     }
                 }
                 require('jsonfile').writeFileSync(this.outDir + 'state.json', out);
