@@ -238,7 +238,7 @@ features are all based on regex's, and along with minification the string change
 
 ### Disable
 The option *options.disable* lets you pass in some tag names to which a *disabled* attribute should be added, this is
-intended to disable form elements.
+intended to disable form elements in archives where the form-processing capabilities have been removed.
 
 ### Slugify
 The option *options.slugify* will convert filenames to more SEO friendly slugs based on the title tag. Additionally
@@ -246,7 +246,7 @@ the option *options.slugifyIgnore* lets you pass in an array of strings to ignor
 (although some argue it may hurt SEO) to remove words like: 'a', 'an', 'as', 'at', 'before', 'but', 'by', 'for', 'from',
  'is', 'in', 'into', 'like', 'of', 'off', 'on', 'onto', 'per', 'since', 'than', 'the', 'this', 'that', 'to', 'up',
 'via', and 'with'.  More likely you'll want to use this to remove the title of your website from the filenames, e.g.
-`[' - mySite.com']`.
+`[' - mySite.com']`.  The original file extension will be retained.
 
 ### Search/Replace
 The option *options.searchReplace* will let you perform custom replaces on text files.  A good use is to correct links
