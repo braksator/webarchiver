@@ -166,7 +166,7 @@ the original text has some overhead too (6 chars for the vFile header and 6+ cha
 > - 30+ char per file overhead: `<?php include 'v.php';echo '` and `';`
 > - 6+ chars in typical replacement: `'.$v.'`
 > - 3+, 4+, 5+ chars in adjacent replacement: `.$v`, `$v.`, `.$v.`, `.$v.'`, or `'.$v.`
-> - 6+ chars in vFile: `$v='';`
+> - 6+ chars per replacement in vFile: `$v='';`
 > - 6 char vFile header: `<?php `
 
 Tip: You could be clever and cut out some overhead by using the *auto_prepend_file*, *auto_append_file*, and *short_open_tag*
@@ -177,10 +177,11 @@ Note: Further deduplication can happen to already deduplicated data, in this cas
 it's 6+ form even if it is an adjacent replacement.  This behavior seems desirable to me.
 
 Due to the overhead it is advisable to not choose a particularly small value for *options.dedupe.minSaving*.
-Setting *options.dedupe.minLength* to higher values will also speed up the algorithm, whereas
-using 0 will automatically calculate it each time based on minSaving.  Setting minLength to greater than 0 but less than
-minSaving + 6 is a poor choice for computing efficiency. Bottom line though; both minLength and minSaving will be
-enforced no matter what you do here.
+Setting *options.dedupe.minLength* to higher values will also speed up the algorithm, whereas using 0 will automatically
+calculate it each time based on minSaving and the 6+ typical replacement overhead (other overhead and occurrences are not
+factored in - you compensate for those by setting minSaving and minOcc high enough).  Setting minLength to greater than
+0 but less than minSaving + 6 is a poor choice for computing efficiency. Bottom line though; both minLength and minSaving
+will be enforced no matter what you do here.
 
 The more chars added in *options.dedupe.startsWith* and *options.dedupe.endsWith* the slower the deduplication tends
 to go.  At the minimum for HTML you should just use '<' and '>', but the braces, brackets, and parenthesis will help with
