@@ -114,7 +114,8 @@ var webarchiver = {};
                     minLength: 20,
                     minSaving: 10,
                     startsWith: ['<', '{', '\\(', '\\['],
-                    endsWith: ['>', '}', '\\)', '\\]', '\\n', '\\s']
+                    endsWith: ['>', '}', '\\)', '\\]', '\\n', '\\s'],
+                    maxFileCompare: 1000
                 }
             };
             this.options = mergeOptions(defaults, options);
@@ -474,10 +475,15 @@ var webarchiver = {};
             var matches = [];
             var a = this.files[fileKey].frags;
             var minLen = this.options.dedupe.minLength ? this.options.dedupe.minLength : this.autoMinLength();
+            var compared = 0;
             for (var fileKey2 = fileKey; fileKey2 >= 0; --fileKey2) {
                 if (!this.files[fileKey2].skip) {
                     var b = this.files[fileKey2].frags;
                     this.fragmentMatches(matches, a, b, fileKey, fileKey2, minLen);
+                    compared++;
+                    if (this.options.dedupe.maxFileCompare && compared > this.options.dedupe.maxFileCompare) {
+                        break;
+                    }
                 }
             }
             return matches;
