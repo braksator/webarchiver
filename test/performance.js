@@ -26,7 +26,6 @@ var outputSize = function (promises, times, lastItem, outDir) {
         console.log("Preparing tests");
 
         var maxCopies = 2,
-            maxPasses = 1,
             configs = {},
             megabytes = 15,
             fileCount = 250,
@@ -34,53 +33,50 @@ var outputSize = function (promises, times, lastItem, outDir) {
             test = 1,
             promises = [];
 
-        configs["minLength = 0"] = {dedupe: {minLength: 0}};
-        configs["minLength = 20"] = {dedupe: {minLength: 20}};
+        configs = [];
+        configs.push({dedupe: {minLength: 0}});
+        configs.push({dedupe: {minLength: 20}});
 
-        var totalTests = maxCopies * maxPasses * Object.keys(configs).length;
+        var totalTests = maxCopies * Object.keys(configs).length;
 
         del.sync("test/performance");
 
         for (var copy = 1; copy <= maxCopies; ++copy) {
             fse.copySync('test/testdata/performance', 'test/performance/performance' + copy);
-            for (var passAmount = 1; passAmount <= maxPasses; ++passAmount) {
-                for (var config in configs) {
-                    if (configs.hasOwnProperty(config)) {
-                        console.log(
-                            "\n\nRunning performance test " + test++ + " of " + totalTests + "; # Files: "
-                            + fileCount * copy + ", Size: " + megabytes * copy + "MB, Passes: " + passAmount
-                            + ", Config: " + config + ".\n"
-                        );
-                        var wa = require('../index');
-                        var outDir = "test/output/performance/performance-" + copy + "-" + passAmount + "-" + config;
-                        del.sync(outDir);
+            for (var c = 0; c < configs.length; ++c) {
 
-                        var options = {
-                            files: "test/performance/**",
-                            output: outDir
-                        };
-                        options.passes = passAmount;
-                        options = mergeOptions(options, configs[config]);
+                console.log(
+                    "\n\nRunning performance test " + test++ + " of " + totalTests + "; # Files: "
+                    + fileCount * copy + ", Size: " + megabytes * copy
+                    + ", Config: " + JSON.stringify(configs[c]) + ".\n"
+                );
+                var wa = require('../index');
+                var outDir = "test/output/performance/performance-" + copy + "-config_" + c;
+                del.sync(outDir);
 
-                        var begin = Date.now();
-                        wa.webArchiver(options);
-                        var end = Date.now();
+                var options = {
+                    files: "test/performance/**",
+                    output: outDir
+                };
+                options = mergeOptions(options, configs[c]);
 
-                        var timeSpent = ((end - begin) / 1000 / 60).toFixed(1) + " minutes";
+                var begin = Date.now();
+                wa.webArchiver(options);
+                var end = Date.now();
 
-                        times.push({
-                            '# Files': fileCount * copy,
-                            'Size': megabytes * copy + " MB",
-                            'Passes': passAmount,
-                            'Config': config,
-                            'Time': timeSpent
-                        });
+                var timeSpent = ((end - begin) / 1000 / 60).toFixed(1) + " minutes";
 
-                        outputSize(promises, times, times.length - 1, outDir);
-                    }
-                }
+                times.push({
+                    '# Files': fileCount * copy,
+                    'Size': megabytes * copy + " MB",
+                    'Config': JSON.stringify(configs[c]),
+                    'Time': timeSpent
+                });
+
+                outputSize(promises, times, times.length - 1, outDir);
 
             }
+
         }
 
         Promise.all(promises).then(function () {

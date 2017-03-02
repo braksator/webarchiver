@@ -51,21 +51,21 @@ describe('#startPath', function () {
 
 describe('#outDir', function () {
     it('should output to the same directory', function () {
-        app.options = { inPlace: true };
+        app.options = {inPlace: true};
         app.startPath = 'var/www/html/';
         var result = app.getOutDir();
         expect(result).to.equal('var/www/html/');
     });
 
     it('should output to the output directory', function () {
-        app.options = { output: 'output' };
+        app.options = {output: 'output'};
         app.startPath = 'var/www/html/';
         var result = app.getOutDir();
         expect(result).to.equal('output/');
     });
 
     it('should output to the output directory but also nest the input paths', function () {
-        app.options = { output: 'output', fullNest: true };
+        app.options = {output: 'output', fullNest: true};
         app.startPath = 'var/www/html/';
         var result = app.getOutDir();
         expect(result).to.equal('output/var/www/html/');
@@ -80,41 +80,46 @@ describe('#fragments', function () {
         // because we only allow fragments to end in 's'.
         var input = ["interstellar", "interstate", "interstitial", "interesting"];
         var min = 3;
-        var long = [];
+        app.matches = new Map;
+        app.varName = 'a';
+        app.options = {dedupe: {minOcc: 0, minSaving: 1}};
         var re = new RegExp("(.*?[" + ['s'].join('') + "]+)", "g");
         for (var i = 0; i < input.length; i++) {
             var a = input[i].split(re).filter(Boolean);
             for (var j = 0; j <= i; j++) {
                 var b = input[j].split(re).filter(Boolean);
-                app.fragmentMatches(long, a, b, i, j, min);
+                app.fragmentMatches([], a, b, i, j, min);
             }
         }
-        expect(long).to.deep.equal([{str: 'inters', occ: {'0': [0], '1': [0], '2': [0]}}]);
+        expect(app.matches.get('inters')).to.deep.equal({occ: {'0': [0], '1': [0], '2': [0]}});
 
     });
 
     it('should do repeated HTML fragment matching', function () {
         var input = ["<test>test</test><test>test</test>"];
         var min = 3;
-        var long = [];
+        app.matches = new Map;
+        app.varName = 'a';
+        app.options = {dedupe: {minOcc: 0, minSaving: 1}};
         var re = new RegExp("(.*?[" + ['>', ';', '}', '\\n', '\\s'].join('') + "]+)", "g");
         for (var i = 0; i < input.length; i++) {
             var a = input[i].split(re).filter(Boolean);
             for (var j = 0; j <= i; j++) {
                 var b = input[j].split(re).filter(Boolean);
-                app.fragmentMatches(long, a, b, i, j, min);
+                app.fragmentMatches([], a, b, i, j, min);
             }
         }
 
-        expect(long).to.deep.equal([{str: '<test>test</test>', occ: {'0': [0, 2]}}]);
+        expect(app.matches.get('<test>test</test>')).to.deep.equal({occ: {'0': [0, 2]}});
 
     });
 
     it('should do complex HTML fragment matching', function () {
         var input = ["baz foo bar;<test>test</test><tag>foo bar; baz<test>test</test></tag>foo; bar baz"];
         var min = 3;
-        var long = [];
-
+        app.matches = new Map;
+        app.varName = 'a';
+        app.options = {dedupe: {minOcc: 0, minSaving: 1}};
         var startsWith = ['<', '{', '\\(', '\\[', '"', "'"];
         var endsWith = ['>', '}', '\\)', '\\]', '.', '"', '\'', ';', '\\n', '\\s'];
         var re = new RegExp("([" + startsWith.join('') + "]?[^" + startsWith.join('') + "" + endsWith.join('') + "]*[" + endsWith.join('') + "]?){1}", "g");
@@ -122,14 +127,12 @@ describe('#fragments', function () {
             var a = input[i].split(re).filter(Boolean);
             for (var j = 0; j <= i; j++) {
                 var b = input[j].split(re).filter(Boolean);
-                app.fragmentMatches(long, a, b, i, j, min);
+                app.fragmentMatches([], a, b, i, j, min);
             }
         }
-        expect(long).to.deep.equal([
-            {str: 'foo bar;', occ: {'0': [1, 7]}},
-            {str: '<test>test</test>', occ: {'0': [3, 11]}},
-            {str: 'baz', occ: {'0': [10, 18]}}
-        ]);
+        expect(app.matches.get('foo bar;')).to.deep.equal({occ: {'0': [1, 7]}});
+        expect(app.matches.get('<test>test</test>')).to.deep.equal({occ: {'0': [3, 11]}});
+        expect(app.matches.get('baz')).to.deep.equal({occ: {'0': [10, 18]}});
 
     });
 
@@ -166,8 +169,10 @@ describe('#minify', function () {
 describe('#doReplace', function () {
 
     it('should replace a string that spans multiple array items', function () {
-        app.files = {0:{}};
-        var res = app.doReplace(['aaa', 'bbb', 'aaa', 'ccc', 'aaa', 'ddd'], 'aaaccc', 'v', 0);
+        app.files = {0: {}};
+        app.matches = new Map();
+        app.matches.set('aaaccc', {var: 'v', reps: {}});
+        var res = app.doReplace(['aaa', 'bbb', 'aaa', 'ccc', 'aaa', 'ddd'], 'aaaccc', app.matches.get('aaaccc'), 0);
         expect(res.join('')).to.equal("aaabbb'.$v.'aaaddd");
     });
 
@@ -221,7 +226,7 @@ describe('#disable', function () {
 
     it('should disable form elements', function () {
         var html = '<form><input type="text" /><textarea></textarea><input type="submit" value="go" /></form>';
-        app.options = { disable: ['button', 'input', 'options', 'select', 'textarea']};
+        app.options = {disable: ['button', 'input', 'options', 'select', 'textarea']};
 
         var res = app.disable(html);
         expect(res).to.equal('<form><input disabled type="text" /><textarea disabled></textarea><input disabled type="submit" value="go" /></form>');
@@ -245,7 +250,7 @@ describe('#commandLine', function () {
         var cmd = 'node ./index.js --files "test/testdata/single.html" --output ' + dir;
 
         // Act
-        exec(cmd, function(error, stdout, stderr) {
+        exec(cmd, function (error, stdout, stderr) {
             // Assert
 
             // Does the output directory exist now?
@@ -490,7 +495,7 @@ describe('#webArchiver', function () {
             passes: 3,
             slugify: true,
             slugifyIgnore: ['gaters.net -'],
-            searchReplace: { search: ['http://162.244.93.21/~gatersne/vbdec2002/'], replace: ['#']},
+            searchReplace: {search: ['http://162.244.93.21/~gatersne/vbdec2002/'], replace: ['#']},
             writeState: true,
             dedupe: {
                 minLength: 20,
@@ -663,12 +668,12 @@ describe('#webArchiver', function () {
             expect(dir + "/lena_std.jpg").to.be.a.path();
             expect(dir + "/sample.bin").to.be.a.path();
             /*
-            var bytes_old = fs.statSync("test/testdata/binary/lena_std.jpg").size;
-            var bytes_new = fs.statSync(dir + "/lena_std.jpg").size;
-            assert.isBelow(bytes_new, bytes_old, '');
-            */
+             var bytes_old = fs.statSync("test/testdata/binary/lena_std.jpg").size;
+             var bytes_new = fs.statSync(dir + "/lena_std.jpg").size;
+             assert.isBelow(bytes_new, bytes_old, '');
+             */
             done();
-        }, 3000);
+        }, 1000);
 
     });
 

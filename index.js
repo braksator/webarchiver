@@ -8,10 +8,10 @@ var mkdirp = require('mkdirp');
 var mergeOptions = require('merge-options');
 var isBinaryFile = require("isbinaryfile");
 var path = require('path');
-var ProgressBar = require('progress');
+var readline = require('readline');
 
 var webarchiver = {};
-(function(){
+(function () {
     module.exports = webarchiver = {
 
         /**node
@@ -41,9 +41,6 @@ var webarchiver = {};
             // Number of files.
             this.numFiles = this.inPaths.length;
 
-            // Set up progress bar.
-            this.progressBar();
-
             // Get the common prefix directories of all the files.
             this.startPath = this.getStartPath(this.inPaths);
             this.startPathLength = this.startPath.length;
@@ -61,7 +58,8 @@ var webarchiver = {};
 
             // Tracking data.
             this.files = {};
-            this.replacements = {};
+            this.matches = new Map();
+            this.stage = 1;
 
             // Process the files.
             this.processFiles();
@@ -71,6 +69,7 @@ var webarchiver = {};
 
             // Write the PHP vfile.
             this.createVarFile();
+
 
             // Write the app state.
             if (this.options.writeState) {
@@ -83,8 +82,7 @@ var webarchiver = {};
                 require('jsonfile').writeFileSync(this.outDir + 'state.json', out);
             }
 
-            // Saved one tick for the end.
-            this.bar.tick(1, {'msg': 'Files processed, completing job...'});
+            this.progress("Finished\n");
 
         },
 
@@ -121,64 +119,24 @@ var webarchiver = {};
             this.options = mergeOptions(defaults, options);
         },
 
-        progressBar: function () {
-            if (!this.options.noProgress) {
-                var additional = this.numFiles + 1;
-                if (this.options.slugify) {
-                    additional += this.numFiles;
-                }
-                this.bar = new ProgressBar('  Archiving [:bar] :percent :msg ETA: :eta sec', {
-                    width: 50,
-                    // This is a 1+2+3+4... formula multiplied by passes plus numFiles to write out the files plus one
-                    // extra tick for writing the vfile.
-                    total: ((this.numFiles * (this.numFiles + 1)) / 2) * this.options.passes + additional
-                });
-            }
-            else {
-                // Dummy.
-                this.bar = {
-                    tick: function () {
-                    }
-                };
-            }
-        },
-
         // Create tracking object for a file.
         createFileTrack: function (fileKey) {
+            var isDir = fs.lstatSync(this.inPaths[fileKey]).isDirectory();
+            var isBin = false;
+            if (!isDir) {
+                isBin = isBinaryFile.sync(this.inPaths[fileKey]);
+            }
             this.files[fileKey] = {
                 path: this.inPaths[fileKey].substr(this.startPathLength),
                 skip: this.justCopy.indexOf(this.inPaths[fileKey]) > -1,
-                textFile: true
+                type: isDir ? 'dir' : (isBin ? 'bin' : 'text')
             };
+            if (isDir || isBin) {
+                // So it isn't used as an 'other' file in dedupes and fs.lstatSync isn't run on the 2nd pass.
+                this.files[fileKey].skip = true;
+            }
             // Output path.
             this.files[fileKey].outPath = this.outDir + this.files[fileKey].path;
-        },
-
-        // Check and handle directories and binary files.
-        handleDirsAndBinaries: function (fileKey) {
-            if (!this.files[fileKey].skip) {
-                if (fs.lstatSync(this.inPaths[fileKey]).isDirectory()) {
-                    // Directory.
-
-                    // So it isn't used as an 'other' file in dedupes and fs.lstatSync isn't run on the 2nd pass.
-                    this.files[fileKey].skip = true;
-                    this.files[fileKey].textFile = false;
-                }
-                else if (isBinaryFile.sync(this.inPaths[fileKey])) {
-                    // Process binary files.
-                    if (this.inPaths[fileKey] != this.files[fileKey].outPath) {
-                        // Ensure the output dir exists.
-                        mkdirp.sync(path.dirname(this.files[fileKey].outPath));
-
-                        // Copy the file over.
-                        var file = fs.readFileSync(this.inPaths[fileKey], 'binary');
-                        fs.writeFileSync(this.files[fileKey].outPath, file, 'binary');
-                    }
-                    // So it isn't used as an 'other' file in dedupes and isBinaryFile isn't run on the 2nd pass.
-                    this.files[fileKey].skip = true;
-                    this.files[fileKey].textFile = false;
-                }
-            }
         },
 
         // Determine additional skip conditions based on the contents of the file.
@@ -195,13 +153,11 @@ var webarchiver = {};
 
         // File processing function.
         processFiles: function () {
-
-            // Alter the filename.
+            // Work out the slugify stuff, if applicable.
             if (this.options.slugify) {
-                // @todo: When adding a feature for pre-analysis of files, include it in this loop.
                 for (var fileKey = 0; fileKey < this.numFiles; ++fileKey) {
                     this.createFileTrack(fileKey);
-                    this.handleDirsAndBinaries(fileKey);
+                    this.progress(this.stage + ') Slugifying file ' + (fileKey + 1) + ' of ' + this.numFiles + ' (' + this.files[fileKey].path + ')');
                     if (!this.files[fileKey].skip) {
                         var str = fs.readFileSync(this.inPaths[fileKey], 'utf8');
                         // Work out slugs.
@@ -211,19 +167,20 @@ var webarchiver = {};
                             fs.renameSync(this.files[fileKey].path, this.files[fileKey].outPath);
                         }
                     }
-
-                    this.bar.tick(1, {'msg': 'File ' + (fileKey + 1) + '/' + this.numFiles + ' (analyzing)'});
                 }
+                this.stage++;
             }
-
             for (var pass = 0; pass < this.options.passes; ++pass) {
                 for (var fileKey = 0; fileKey < this.numFiles; ++fileKey) {
+
                     if (pass == 0 && !this.options.slugify) {
                         this.createFileTrack(fileKey);
-                        this.handleDirsAndBinaries(fileKey);
                     }
 
-                    if (this.files[fileKey].textFile) {
+                    this.progress(this.stage + ') Processing file ' + (fileKey + 1) + ' of ' + this.numFiles + ', pass '
+                        + (pass + 1) + ' of ' + this.options.passes + ' (' + this.files[fileKey].path + ')');
+
+                    if (this.files[fileKey].type == 'text') {
                         // Process text files.
                         var str;
                         if (pass == 0) {
@@ -236,7 +193,7 @@ var webarchiver = {};
                         // Ensure it's not a file to skip.
                         if (!this.files[fileKey].skip) {
                             if (pass == 0) {
-                                // One-time string manipulations.
+                                // String manipulations.
                                 str = this.manipulations(fileKey, str);
                             }
 
@@ -247,92 +204,150 @@ var webarchiver = {};
                                 }
 
                                 // Apply existing replacements.
-                                for (var varName in this.replacements) {
-                                    if (this.replacements.hasOwnProperty(varName)) {
-                                        // No need to call replacementAllowed here because if it wasn't allowed it wasn't stored.
-                                        this.files[fileKey].frags = this.doReplace(this.files[fileKey].frags, this.replacements[varName], varName, fileKey);
+                                for (var [matchStr, match] of this.matches.entries()) {
+                                    if (match.allowed) {
+                                        this.files[fileKey].frags = this.doReplace(this.files[fileKey].frags, matchStr, match, fileKey);
                                     }
                                 }
 
-                                // Deduplicate within this file and with previous files.
-                                var matches = this.findDuplicates(fileKey);
-                                if (matches.length > 0) {
-                                    // Apply the deduplication replacements.
-                                    this.processMatches(matches);
-                                }
+                                // Find duplicates.
+                                var new_matches = this.findDuplicates(fileKey);
+                                this.processNewMatches(new_matches);
 
                             }
-                        }
-
-                        // Write the current text file if it wasn't deduped.  It may get deduped later and will be overwritten.
-                        if (pass == 0 && (!this.options.dedupe || !this.files[fileKey].deduped)) {
-                            mkdirp.sync(path.dirname(this.files[fileKey].outPath));
-                            fs.writeFileSync(this.files[fileKey].outPath, str);
+                            else if (pass == 0) {
+                                // Immediate write for non-deduplicated text files.
+                                mkdirp.sync(path.dirname(this.files[fileKey].outPath));
+                                fs.writeFileSync(this.files[fileKey].outPath, str);
+                                this.files[fileKey].saved = true;
+                            }
                         }
                     }
-
-                    this.bar.tick(fileKey + 1, {'msg': 'File ' + (fileKey + 1) + '/' + this.numFiles + ' (pass ' + (pass + 1) + '/' + this.options.passes + ')'});
-                }
-
-            }
-
-        },
-
-        // Write the deduplicated files.
-        createOutFiles: function () {
-            if (this.options.dedupe !== false) {
-                for (var fileKey = 0; fileKey < this.numFiles; ++fileKey) {
-                    if (this.files[fileKey].deduped) {
-                        mkdirp.sync(path.dirname(this.files[fileKey].outPath));
-                        fs.writeFileSync(
-                            this.files[fileKey].outPath,
-                            this.fixCodes(
-                                this.prepend(this.options.vFile, (this.files[fileKey].path.match(/\//g) || []).length)
-                                + this.files[fileKey].frags.join('')
-                                + this.append()
-                            )
-                        );
-                    }
-                    this.bar.tick(1, {'msg': 'Write ' + (fileKey + 1) + '/' + this.numFiles});
                 }
             }
-            else {
-                this.bar.tick(this.numFiles, {'msg': 'Write ' + this.numFiles + '/' + this.numFiles});
-            }
-        },
-
-        // Write the PHP variables file.
-        createVarFile: function () {
-            var vFile = '<?php ';
-            for (var varName in this.replacements) {
-                if (this.replacements.hasOwnProperty(varName)) {
-                    vFile += this.varCode(varName) + '=\'' + this.replacements[varName] + '\';';
-                }
-            }
-            fs.writeFileSync(this.outDir + this.options.vFile, this.fixCodes(vFile));
+            this.stage++;
         },
 
         // Act on new matches.
-        processMatches: function (matches) {
-            for (var match = 0; match < matches.length; ++match) {
-                // Use a function as a last chance to reject this match.
-                if (this.replacementAllowed(matches[match])) {
-                    // Store the replacement.
-                    this.replacements[this.varName] = matches[match].str;
+        processNewMatches: function (new_matches) {
+            for (var m = 0; m < new_matches.length; ++m) {
+                var matchStr = new_matches[m];
+                var match = this.matches.get(matchStr);
+                this.setOccTotal(match);
+                match.allowed = this.replacementAllowed(match, matchStr);
+                if (match.allowed) {
+                    match.var = this.varName;
+                    match.reps = 0;
 
                     // Make the replacements.
-                    for (var fileKey in matches[match].occ) {
-                        if (matches[match].occ.hasOwnProperty(fileKey)) {
-                            this.files[fileKey].frags =
-                                this.doReplace(this.files[fileKey].frags, matches[match].str, this.varName, fileKey);
+                    for (var fileKey in match.occ) {
+                        if (match.occ.hasOwnProperty(fileKey)) {
+                            this.files[fileKey].frags = this.doReplace(this.files[fileKey].frags, matchStr, match, fileKey);
                         }
                     }
 
-                    // varName has been spent, so update to another one.
-                    this.varName = this.nextVarName(this.varName);
+                    if (match.reps) {
+                        // varName has been spent, so update to another one.
+                        this.varName = this.nextVarName(this.varName);
+                    }
+                    else {
+                        match.var = null;
+                    }
                 }
             }
-        },
+        }
+        ,
+
+        // Apply all matches, when used in analyze mode.
+        applyOrderedMatches: function (matchStrings) {
+            // Apply the deduplication match replacements.
+            var matches_length = matchStrings.length;
+            for (var m = 0; m < matches_length; ++m) {
+                this.progress(this.stage + ') Applying match ' + (m + 1) + ' of ' + matches_length);
+                var matchStr = matchStrings[m];
+                var match = this.matches.get(matchStr);
+                this.setOccTotal(match);
+                match.allowed = this.replacementAllowed(match, matchStr);
+                if (match.allowed) {
+                    match.var = this.varName;
+                    match.reps = 0;
+                    // Make the replacements.
+                    for (var fileKey in match.occ) {
+                        if (match.occ.hasOwnProperty(fileKey)) {
+                            this.files[fileKey].frags = this.doReplace(this.files[fileKey].frags, matchStr, match, fileKey);
+                        }
+                    }
+                    if (match.reps) {
+                        // varName has been spent, so update to another one.
+                        this.varName = this.nextVarName(this.varName);
+                    }
+                    else {
+                        match.var = null;
+                    }
+                }
+            }
+        }
+        ,
+
+        // Show progress.
+        progress: function (out) {
+            if (!this.options.noProgress) {
+                readline.clearLine(process.stdout, 0);
+                readline.cursorTo(process.stdout, 0);
+                process.stdout.write(out);
+            }
+        }
+        ,
+
+        // Write the files.
+        createOutFiles: function () {
+            for (var fileKey = 0; fileKey < this.numFiles; ++fileKey) {
+                this.progress(this.stage + ') Writing file ' + (fileKey + 1) + ' of ' + this.numFiles + ' (' + this.files[fileKey].path + ')');
+                mkdirp.sync(path.dirname(this.files[fileKey].outPath));
+                // Write deduplicated text files.
+                if (this.files[fileKey].deduped) {
+                    fs.writeFileSync(
+                        this.files[fileKey].outPath,
+                        this.fixCodes(
+                            this.prepend(this.options.vFile, (this.files[fileKey].path.match(/\//g) || []).length)
+                            + this.files[fileKey].frags.join('')
+                            + this.append()
+                        )
+                    );
+                }
+                // Write directories.
+                else if (this.files[fileKey].type == 'dir') {
+                    mkdirp.sync(this.files[fileKey].outPath);
+                }
+                // Write binaries.
+                else if (this.files[fileKey].type == 'bin') {
+                    // Copy the file over.
+                    var file = fs.readFileSync(this.inPaths[fileKey], 'binary');
+                    fs.writeFileSync(this.files[fileKey].outPath, file, 'binary');
+                }
+                // Write non-deduplicated text files that haven't already been saved.
+                else if (this.files[fileKey].type == 'text' && !this.files[fileKey].saved) {
+                    var str = fs.readFileSync(this.inPaths[fileKey], 'utf8');
+                    fs.writeFileSync(this.files[fileKey].outPath, str);
+                }
+            }
+            this.stage++;
+        }
+        ,
+
+        // Write the PHP variables file.
+        createVarFile: function () {
+            this.progress(this.stage + ') Writing variables file');
+            var vFile = '<?php ';
+            for (var [matchStr, match] of this.matches.entries()) {
+                if (this.matches.get(matchStr).reps) {
+                    vFile += this.varCode(match.var) + '=\'' + matchStr + '\';';
+                }
+            }
+            mkdirp.sync(path.dirname(this.outDir));
+            fs.writeFileSync(this.outDir + this.options.vFile, this.fixCodes(vFile));
+        }
+        ,
 
         /**
          * Determines whether to allow the current duplicate to be replaced in files.
@@ -340,48 +355,55 @@ var webarchiver = {};
          * The implementation of this function should remain ignorant of which string/file the replacement is being applied
          * to as its result is reused for other files without calling this function again.
          *
-         * @param match Object containing information about the deduplication match.
+         * @param match {object} Object containing information about the deduplication match.
          * @returns {boolean}
          */
-        replacementAllowed: function (match) {
-            var occSatisfied = true;
-            if (this.options.dedupe.minOcc) {
-                var occurrences = 0;
-                for (var i in match.occ) {
-                    if (match.occ.hasOwnProperty(i)) {
-                        occurrences += match.occ[i].length;
-                    }
+        replacementAllowed: function (match, matchStr) {
+            return (!this.options.dedupe.minOcc || match.occTotal >= this.options.dedupe.minOcc) && matchStr.length >= this.autoMinLength();
+        }
+        ,
+
+        // Work out the total occurrences of a match.
+        setOccTotal: function (match) {
+            var occurrences = 0;
+            for (var i in match.occ) {
+                if (match.occ.hasOwnProperty(i)) {
+                    occurrences += match.occ[i].length;
                 }
-                occSatisfied = occurrences >= this.options.dedupe.minOcc;
             }
-            return occSatisfied && match.str.length >= this.autoMinLength();
-        },
+            match.occTotal = occurrences;
+        }
+        ,
 
         // Generates an automatic value for minLength based on minSaving and the length of the current shortCode.
         autoMinLength: function () {
             return this.options.dedupe.minSaving + this.shortCode(this.varName).length;
-        },
+        }
+        ,
 
         // Perform the replacement.
-        doReplace: function (frags, match, varName, fileKey) {
+        doReplace: function (frags, matchStr, match, fileKey) {
             var seek, offset;
             for (var frag = 0; frag < frags.length; ++frag) {
-                if (match.indexOf(frags[frag]) === 0) {
+                if (matchStr.indexOf(frags[frag]) === 0) {
                     // This could be it.
                     seek = frag + 1;
                     offset = frags[frag].length;
-                    while (seek < frags.length && offset < match.length && match.substring(offset, offset + frags[seek].length) === frags[seek]) {
+                    while (seek < frags.length && offset < matchStr.length && matchStr.substring(offset, offset + frags[seek].length) === frags[seek]) {
                         offset += frags[seek].length;
                         seek++;
                     }
-                    if (offset >= match.length) {
+                    if (offset >= matchStr.length) {
                         // This is it.  Make the replacement and clear out the extra elements.
-                        frags[frag] = this.shortCode(varName);
+                        frags[frag] = this.shortCode(match.var);
                         for (var i = frag + 1; i < seek; ++i) {
                             frags[i] = '';
                         }
                         // Mark this file as deduped.
                         this.files[fileKey].deduped = true;
+
+                        // Count replacements.
+                        match.reps++;
 
                         // Wind f forward.
                         frag = seek - 1;
@@ -390,34 +412,40 @@ var webarchiver = {};
             }
             // Remove the cleared elements as they will hinder stacked matches.
             return frags.filter(Boolean);
-        },
+        }
+        ,
 
         // Clean up a string with replacements in it.
         fixCodes: function (str) {
             str = this.replaceAll(str, ".''", '');
             str = this.replaceAll(str, "''.", '');
             return str;
-        },
+        }
+        ,
 
         // Replace all occurrences of a substring.
         replaceAll: function (str, find, replace) {
             return str.replace(new RegExp(this.escapeRegExp(find), 'g'), replace);
-        },
+        }
+        ,
 
         // For use with replaceAll().
         escapeRegExp: function (str) {
             return str.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
-        },
+        }
+        ,
 
         // Build the replacement string.
         shortCode: function (varName) {
             return "'." + this.varCode(varName) + ".'";
-        },
+        }
+        ,
 
         // Creates a variable string from a variable name.
         varCode: function (varName) {
             return '$' + varName;
-        },
+        }
+        ,
 
         // Build the prepend string to place at the start of each deduplicated file.
         prepend: function (vFile, up) {
@@ -425,17 +453,20 @@ var webarchiver = {};
                 vFile = '../' + vFile;
             }
             return '<?php include \'' + vFile + '\';echo \'';
-        },
+        }
+        ,
 
         // Adds slashes to the contents of a file to make it compatible with deduplication.
         addSlashes: function (str) {
             return (str + '').replace(/'/g, "\'").replace(/\\/g, '\\');
-        },
+        }
+        ,
 
         // Build the append string to place at the end of each deduplicated file.
         append: function () {
             return "';";
-        },
+        }
+        ,
 
         // Get common start of an array of paths.
         getStartPath: function (strings) {
@@ -449,14 +480,16 @@ var webarchiver = {};
             // Omit chars after the final forward-slash.
             if (sharedStart.indexOf("/") > -1) sharedStart = sharedStart.substr(0, 1 + sharedStart.lastIndexOf("/"));
             return sharedStart;
-        },
+        }
+        ,
 
         // Get the output directory path.
         getOutDir: function () {
             var out = this.options.inPlace ? this.startPath : this.options.output.replace(/\/?$/, '/') + (this.options.fullNest ? this.startPath : "");
             // Return with trailing slash.
             return out.replace(/\/?$/, '/');
-        },
+        }
+        ,
 
         // Fragment a file to prepare it for deduplication.
         createFragments: function (str) {
@@ -468,40 +501,42 @@ var webarchiver = {};
                 + "]?){1}", "g");
 
             return str.split(re).filter(Boolean);
-        },
+        }
+        ,
 
         // Find duplicates function.
         findDuplicates: function (fileKey) {
-            var matches = [];
             var a = this.files[fileKey].frags;
             var minLen = this.options.dedupe.minLength ? this.options.dedupe.minLength : this.autoMinLength();
             var compared = 0;
+            var new_matches = [];
             for (var fileKey2 = fileKey; fileKey2 >= 0; --fileKey2) {
                 if (!this.files[fileKey2].skip) {
                     var b = this.files[fileKey2].frags;
-                    this.fragmentMatches(matches, a, b, fileKey, fileKey2, minLen);
+                    this.fragmentMatches(new_matches, a, b, fileKey, fileKey2, minLen);
                     compared++;
                     if (this.options.dedupe.maxFileCompare && compared > this.options.dedupe.maxFileCompare) {
                         break;
                     }
                 }
             }
-            return matches;
-        },
+            return new_matches;
+        }
+        ,
 
         /**
          * Searches for common consecutive items in two arrays of strings.
          *
          * If a_name and b_name are the same it will be aware that it is matching within the same piece of data.
          *
-         * @param {object} matches the object in which to add results, passed in so it can be reused.
+         * @param {array} new_matches an array to store the keys of new matches.
          * @param {array} a an array of strings.
          * @param {array} b an array of strings.
          * @param {int|string} a_name name of array a, usually an integer.
          * @param {int|string} b_name name of array b, usually an integer.
          * @param {int} min the minimum size of a string to be considered.
          */
-        fragmentMatches: function (matches, a, b, a_name, b_name, min) {
+        fragmentMatches: function (new_matches, a, b, a_name, b_name, min) {
             var a_length = a.length;
             for (var i = 0; i < a_length; ++i) {
                 var b_length = b.length;
@@ -514,38 +549,8 @@ var webarchiver = {};
                             ++k;
                         }
                         if (str.length >= min) {
-                            var existing = this.findWithAttr(matches, 'str', str);
-                            if (existing > -1) {
-                                if (matches[existing].occ[a_name]) {
-                                    if (matches[existing].occ[a_name].indexOf(i) == -1) {
-                                        matches[existing].occ[a_name].push(i);
-                                    }
-                                }
-                                else {
-                                    matches[existing].occ[a_name] = [i];
-                                }
-                                if (matches[existing].occ[b_name]) {
-                                    if (matches[existing].occ[b_name].indexOf(i) == -1) {
-                                        matches[existing].occ[b_name].push(i);
-                                    }
-                                }
-                                else {
-                                    matches[existing].occ[b_name] = [i];
-                                }
-                            }
-                            else if (a_name != b_name) {
-                                matches.push({
-                                    'str': str,
-                                    'occ': {[a_name]: [i], [b_name]: [j]}
-                                });
-                            }
-                            else {
-                                matches.push({
-                                    'str': str,
-                                    'occ': {[a_name]: [i, j]}
-                                });
+                            this.addMatch(new_matches, a_name, i, b_name, j, str);
 
-                            }
                             // Wind i and j forward so we don't just match the suffix of the previous match.
                             i += k - 1;
                             j += k - 1;
@@ -553,7 +558,43 @@ var webarchiver = {};
                     }
                 }
             }
-        },
+        }
+        ,
+
+        // Merge a match into an object of matches.
+        addMatch: function (new_matches, a_name, a_pos, b_name, b_pos, str) {
+            var match = this.matches.get(str);
+            if (match !== undefined) {
+                if (match.occ[a_name]) {
+                    if (match.occ[a_name].indexOf(a_pos) == -1) {
+                        match.occ[a_name].push(a_pos);
+                    }
+                }
+                else {
+                    match.occ[a_name] = [a_pos];
+                }
+                if (match.occ[b_name]) {
+                    if (match.occ[b_name].indexOf(b_pos) == -1) {
+                        match.occ[b_name].push(b_pos);
+                    }
+                }
+                else {
+                    match.occ[b_name] = [b_pos];
+                }
+            }
+            else if (a_name != b_name) {
+                this.matches.set(str, {
+                    'occ': {[a_name]: [a_pos], [b_name]: [b_pos]}
+                });
+            }
+            else {
+                this.matches.set(str, {
+                    'occ': {[a_name]: [a_pos, b_pos]}
+                });
+            }
+            new_matches.push(str);
+        }
+        ,
 
         // Increments a PHP compatible variable name.  Input should start with an alpha char.
         nextVarName: function (str) {
@@ -581,22 +622,14 @@ var webarchiver = {};
                     + Array(zeros + 1).join('0');
             }
             return str;
-        },
-
-        // Find the index in an array of objects by the value of an object's property.
-        findWithAttr: function (array, attr, value) {
-            for (var i = 0; i < array.length; i += 1) {
-                if (array[i][attr] === value) {
-                    return i;
-                }
-            }
-            return -1;
-        },
+        }
+        ,
 
         // Minify function.
         minify: function (str) {
             return minify(str, this.options.minify);
-        },
+        }
+        ,
 
         // Crude form element disabler.
         disable: function (str) {
@@ -606,10 +639,11 @@ var webarchiver = {};
                 find.push('<' + this.options.disable[d]);
                 replace.push('<' + this.options.disable[d] + ' disabled');
             }
-            return str.replace(new RegExp(find.join('|'), 'g'), function(tagOpen) {
+            return str.replace(new RegExp(find.join('|'), 'g'), function (tagOpen) {
                 return replace[find.indexOf(tagOpen)];
             });
-        },
+        }
+        ,
 
         // Get the slugified title.
         slugifySlug: function (str) {
@@ -623,7 +657,8 @@ var webarchiver = {};
                 }
             }
             return false;
-        },
+        }
+        ,
 
         // Alter the filename.
         slugify: function (fileKey, str) {
@@ -643,17 +678,19 @@ var webarchiver = {};
                 this.files[fileKey].outPath = this.outDir + this.files[fileKey].alteredPath;
                 this.slugMap[basePath + slug] = this.files[fileKey].path;
             }
-        },
+        }
+        ,
 
-        slugifyReplace: function(str) {
+        slugifyReplace: function (str) {
             for (var slug in this.slugMap) {
                 str = this.replaceAll(str, this.slugMap[slug], slug);
             }
             return str;
-        },
+        }
+        ,
 
         // Custom string manipulation.
-        manipulations: function(fileKey, str) {
+        manipulations: function (fileKey, str) {
             // Minify the file contents.
             if (this.options.minify) {
                 str = this.minify(str);
@@ -664,9 +701,9 @@ var webarchiver = {};
                 var a = this.options.searchReplace.search;
                 var b = this.options.searchReplace.replace;
                 var i = this.options.searchReplace.i ? 'i' : '';
-                str = str.replace(new RegExp(a.map(function(x) {
+                str = str.replace(new RegExp(a.map(function (x) {
                     return x.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-                }).join('|'), 'g' + i), function(c) {
+                }).join('|'), 'g' + i), function (c) {
                     return b[a.indexOf(c)];
                 });
             }
@@ -686,29 +723,28 @@ var webarchiver = {};
 
     };
 
-    // This is for command line usage.
+// This is for command line usage.
     /* istanbul ignore next */
     if (!module.parent) {
         // Grab command line args.
         var commandLineArgs = require('command-line-args');
         var optionDefinitions = [
-            { name: 'files', type: String, multiple: true },
-            { name: 'justCopy', type: String, multiple: true },
-            { name: 'inPlace', type: Boolean },
-            { name: 'output', type: String },
-            { name: 'dedupe', type: Boolean },
-            { name: 'dedupe.minLength', type: Number  },
-            { name: 'dedupe.minSaving', type: Number  },
-            { name: 'dedupe.startsWith', type: String, multiple: true },
-            { name: 'dedupe.endsWith', type: String, multiple: true },
-            { name: 'minify', type: Boolean },
-            { name: 'vFile', type: String },
-            { name: 'fullNest', type: Boolean },
-            { name: 'skipContaining', type: String, multiple: true },
-            { name: 'noProgress', type: Boolean },
-            { name: 'passes', type: Number }
+            {name: 'files', type: String, multiple: true},
+            {name: 'justCopy', type: String, multiple: true},
+            {name: 'inPlace', type: Boolean},
+            {name: 'output', type: String},
+            {name: 'dedupe', type: Boolean},
+            {name: 'dedupe.minLength', type: Number},
+            {name: 'dedupe.minSaving', type: Number},
+            {name: 'dedupe.startsWith', type: String, multiple: true},
+            {name: 'dedupe.endsWith', type: String, multiple: true},
+            {name: 'minify', type: Boolean},
+            {name: 'vFile', type: String},
+            {name: 'fullNest', type: Boolean},
+            {name: 'skipContaining', type: String, multiple: true},
+            {name: 'noProgress', type: Boolean}
         ];
-        var options = commandLineArgs(optionDefinitions, { partial: true });
+        var options = commandLineArgs(optionDefinitions, {partial: true});
 
         // minify.* options will be in '_unknown', so move them out of there.
         if (options['_unknown']) {
@@ -741,4 +777,5 @@ var webarchiver = {};
         // Execute the app.
         webarchiver.webArchiver(options);
     }
-})();
+})
+();

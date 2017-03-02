@@ -127,7 +127,7 @@ You may override some or all of these options.
 | vFile             | string        | The name of the PHP variables file if 'v.php' is not acceptable.                                                          | 'v.php'       |
 | fullNest          | bool          | Whether to nest the full input path into the output directory.  You shouldn't need this in most cases.                    |               |
 | skipContaining    | bool          | An array of strings; if a text file contains any of them the file will be treated as though it was matched in justCopy.   | ['<?']        |
-| noProgress        | bool          | Set to true to disable the progress bar.                                                                                  |               |
+| noProgress        | bool          | Set to true to disable the progress output.                                                                               |               |
 | passes            | int           | Number of deduplication passes.  Often things are missed on first pass.  Can increase for extra dedupe checks.            | 2             |
 | disable           | array         | Crude form element disabler, pass in something like `['button', 'input', 'options', 'select', 'textarea']`.               |               |
 | slugify           | bool          | Converts filenames of text files that contain an HTML title tag to SEO friendly slugs based on the title.                 |               |
@@ -205,6 +205,23 @@ options object contains configuration for additional deduplication behavior.
 
 You may override some or all of these options at *options.dedupe*, your options will be merged into the defaults.
 You can set *options.dedupe* to false to disable deduplication.
+
+
+## Dedupe mode
+
+The default dedupeMode is 0, but there are some experimental modes added in to try out, they perform slower and their
+effectiveness is yet to be determined.
+
+| dedupeMode    | Description                                                                                                               |
+| ---           | ---                                                                                                                       |
+| 0             | Apply deduplication match replacements when processing each file. (fastest)                                               |
+| 1             | Apply deduplication match replacements after analyzing all files.                                                         |
+| 2             | Apply deduplication match replacements after analyzing all files, use longest matches first.                              |
+| 3             | Apply deduplication match replacements after analyzing all files, use shortest matches first.                             |
+| 4             | Apply deduplication match replacements after analyzing all files, use most frequent matches first.                        |
+| 5             | Apply deduplication match replacements after analyzing all files, use least frequent matches first.                       |
+| 6             | Apply deduplication match replacements after analyzing all files, use longest * most frequent matches first.              |
+| 7             | Apply deduplication match replacements after analyzing all files, use longest * most frequent matches last.               |
 
 ## Minify options
 
@@ -294,11 +311,7 @@ I have some more ideas for this package which I may pursue:
 
 + Pull down remote websites to archive.  Currently it only works on static files you already have.
 + Extract contents of style and script tags into separate files.  This would allow them to be cached client-side.
-+ I wanted to support image compression out of the box, but that proved more time-consuming than I'd hoped, could be
-revisited but not a high priority.
-+ Right now when a match is found it gets used, even though it might be a subset of a longer match in another file.  It
-would be possible to perform a full analysis of the files first before deciding which replacements to use.  I suspect
-the current algorithm's behavior to match the first file against itself first is also a detriment in choosing matches.
++ Perhaps integrating image compression, and using magic number filetype detection in case the extension is wrong.
 
 ## BTW...
 
@@ -321,12 +334,12 @@ thousands of files, gigabytes of data, will require some patience.
 A performance test is available in the github repo and can be executed with `npm run performance`. This data set
 contains a high number of duplicates to really run this thing through the wringer.
 
-| # Files | Size  | Passes | Config         | Time         | Output size |
-| ------- | ----- | ------ | -------------- | ------------ | ----------- |
-| 250     | 15 MB | 1      | minLength = 0  | 11.6 minutes | 2.71 MB     |
-| 250     | 15 MB | 1      | minLength = 20 | 11.0 minutes | 2.70 MB     |
-| 500     | 30 MB | 1      | minLength = 0  | 26.7 minutes | 2.97 MB     |
-| 500     | 30 MB | 1      | minLength = 20 | 25.6 minutes | 2.92 MB     |
+| # Files | Size  | Config         | Time         | Output size |
+| ------- | ----- | -------------- | ------------ | ----------- |
+| 250     | 15 MB | minLength = 0  | 10.4 minutes | 2.48 MB     |
+| 250     | 15 MB | minLength = 20 | 9.4 minutes  | 2.49 MB     |
+| 500     | 30 MB | minLength = 0  | 26.9 minutes | 2.92 MB     |
+| 500     | 30 MB | minLength = 20 | 25.6 minutes | 2.91 MB     |
 
 This shows how setting minLength to 0 (auto) is slower and can even result in worse compression than setting a higher
 value.  It also shows that doubling the amount of data to process leads to MORE THAN double the processing time.  The
