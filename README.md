@@ -6,7 +6,7 @@ Deduplicates and compresses a collection of website files and the resulting file
 Intended to optimize storage space for static website archives using deduplication, and minification.
 Works particularly well for large generated websites that have been pulled with wget or curl.  The resulting text files
 will retain their original file extensions but must be preprocessed with PHP.  Text files already containing what could
-potentially be PHP code will not be changed.  Binary files other than images will be unchanged.  You can control which
+potentially be PHP code will not be changed.  Binary files will be unchanged.  You can control which
 of the files are just copied over (left unchanged).
 
 ## Background
