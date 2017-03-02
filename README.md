@@ -294,7 +294,9 @@ I have some more ideas for this package which I may pursue:
 
 + Pull down remote websites to archive.  Currently it only works on static files you already have.
 + Extract contents of style and script tags into separate files.  This would allow them to be cached client-side.
-+ Perhaps integrating image compression, and using magic number filetype detection in case the extension is wrong.
++ Perhaps integrating image compression, and using magic number filetype detection in case the extension is wrong (it was
+common for image data to be served from PHP or Perl, or for webmasters to use bogus image extensions to bypass hosting
+limitations, and finding these can be a problem without automation.)
 
 ## BTW...
 
