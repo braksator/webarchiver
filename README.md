@@ -206,23 +206,6 @@ options object contains configuration for additional deduplication behavior.
 You may override some or all of these options at *options.dedupe*, your options will be merged into the defaults.
 You can set *options.dedupe* to false to disable deduplication.
 
-
-## Dedupe mode
-
-The default dedupeMode is 0, but there are some experimental modes added in to try out, they perform slower and their
-effectiveness is yet to be determined.
-
-| dedupeMode    | Description                                                                                                               |
-| ---           | ---                                                                                                                       |
-| 0             | Apply deduplication match replacements when processing each file. (fastest)                                               |
-| 1             | Apply deduplication match replacements after analyzing all files.                                                         |
-| 2             | Apply deduplication match replacements after analyzing all files, use longest matches first.                              |
-| 3             | Apply deduplication match replacements after analyzing all files, use shortest matches first.                             |
-| 4             | Apply deduplication match replacements after analyzing all files, use most frequent matches first.                        |
-| 5             | Apply deduplication match replacements after analyzing all files, use least frequent matches first.                       |
-| 6             | Apply deduplication match replacements after analyzing all files, use longest * most frequent matches first.              |
-| 7             | Apply deduplication match replacements after analyzing all files, use longest * most frequent matches last.               |
-
 ## Minify options
 
 Minification is performed on files that don't appear to contain binary data, aren't matched with *options.justCopy*,
