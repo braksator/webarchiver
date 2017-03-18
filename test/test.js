@@ -80,7 +80,7 @@ describe('#fragments', function () {
         // because we only allow fragments to end in 's'.
         var input = ["interstellar", "interstate", "interstitial", "interesting"];
         var min = 3;
-        app.matches = new Map;
+        app.batchCreate('matches');
         app.varName = 'a';
         app.options = {dedupe: {minOcc: 0, minSaving: 1}};
         var re = new RegExp("(.*?[" + ['s'].join('') + "]+)", "g");
@@ -91,14 +91,15 @@ describe('#fragments', function () {
                 app.fragmentMatches([], a, b, i, j, min);
             }
         }
-        expect(app.matches.get('inters')).to.deep.equal({occ: {'0': [0], '1': [0], '2': [0]}});
+        var matchResult = app.batchRead('matches', 'inters', 'str');
+        expect(matchResult.value).to.deep.equal({str: 'inters', occ: {'0': [0], '1': [0], '2': [0]}});
 
     });
 
     it('should do repeated HTML fragment matching', function () {
         var input = ["<test>test</test><test>test</test>"];
         var min = 3;
-        app.matches = new Map;
+        app.batchCreate('matches');
         app.varName = 'a';
         app.options = {dedupe: {minOcc: 0, minSaving: 1}};
         var re = new RegExp("(.*?[" + ['>', ';', '}', '\\n', '\\s'].join('') + "]+)", "g");
@@ -110,14 +111,15 @@ describe('#fragments', function () {
             }
         }
 
-        expect(app.matches.get('<test>test</test>')).to.deep.equal({occ: {'0': [0, 2]}});
+        var matchResult = app.batchRead('matches', '<test>test</test>', 'str');
+        expect(matchResult.value).to.deep.equal({str: '<test>test</test>', occ: {'0': [0, 2]}});
 
     });
 
     it('should do complex HTML fragment matching', function () {
         var input = ["baz foo bar;<test>test</test><tag>foo bar; baz<test>test</test></tag>foo; bar baz"];
         var min = 3;
-        app.matches = new Map;
+        app.batchCreate('matches');
         app.varName = 'a';
         app.options = {dedupe: {minOcc: 0, minSaving: 1}};
         var startsWith = ['<', '{', '\\(', '\\[', '"', "'"];
@@ -130,9 +132,12 @@ describe('#fragments', function () {
                 app.fragmentMatches([], a, b, i, j, min);
             }
         }
-        expect(app.matches.get('foo bar;')).to.deep.equal({occ: {'0': [1, 7]}});
-        expect(app.matches.get('<test>test</test>')).to.deep.equal({occ: {'0': [3, 11]}});
-        expect(app.matches.get('baz')).to.deep.equal({occ: {'0': [10, 18]}});
+        var matchResult = app.batchRead('matches', 'foo bar;', 'str');
+        expect(matchResult.value).to.deep.equal({str: 'foo bar;', occ: {'0': [1, 7]}});
+        matchResult = app.batchRead('matches', '<test>test</test>', 'str');
+        expect(matchResult.value).to.deep.equal({str: '<test>test</test>', occ: {'0': [3, 11]}});
+        matchResult = app.batchRead('matches', 'baz', 'str');
+        expect(matchResult.value).to.deep.equal({str: 'baz', occ: {'0': [10, 18]}});
 
     });
 
@@ -170,9 +175,8 @@ describe('#doReplace', function () {
 
     it('should replace a string that spans multiple array items', function () {
         app.files = {0: {}};
-        app.matches = new Map();
-        app.matches.set('aaaccc', {var: 'v', reps: {}});
-        var res = app.doReplace(['aaa', 'bbb', 'aaa', 'ccc', 'aaa', 'ddd'], 'aaaccc', app.matches.get('aaaccc'), 0);
+        var match = {str: 'aaaccc', var: 'v', reps: {}};
+        var res = app.doReplace(['aaa', 'bbb', 'aaa', 'ccc', 'aaa', 'ddd'], match, app.files[0], 0);
         expect(res.join('')).to.equal("aaabbb'.$v.'aaaddd");
     });
 
