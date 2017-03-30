@@ -1,3 +1,5 @@
+[![js-standard-style](https://img.shields.io/badge/I%20like-purple-663399.svg)](#)
+
 WebArchiver
 ===========
 
