@@ -1,5 +1,5 @@
 [![npm](https://img.shields.io/npm/dt/webarchiver.svg)](#)
-[![js-standard-style](https://img.shields.io/badge/Supported%20by-WordCrush-fa51ae.svg)](https://www.wordcrush.net)
+[![js-standard-style](https://img.shields.io/badge/supported%20by-WordCrush-fa51ae.svg)](https://www.wordcrush.net)
 
 WebArchiver
 ===========
