@@ -1,6 +1,6 @@
 {
   "name": "webarchiver",
-  "version": "3.6.2",
+  "version": "3.6.3",
   "description": "Deduplicates and compresses a collection of website files and the resulting files must be interpreted with PHP.",
   "keywords": [
     "dedupe",
