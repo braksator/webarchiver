@@ -172,6 +172,7 @@ the original text has some overhead too (6 chars for the vFile header and 6+ cha
 > - 3+, 4+, 5+ chars in adjacent replacement: `.$v`, `$v.`, `.$v.`, `.$v.'`, or `'.$v.`
 > - 6+ chars per replacement in vFile: `$v='';`
 > - 6 char vFile header: `<?php `
+> - 1 char per single-quote: i.e.: `'` becomes `\'`
 
 Tip: You could be clever and cut out some overhead by using the *auto_prepend_file*, *auto_append_file*, and *short_open_tag*
 [directives in php.ini](http://php.net/manual/en/ini.core.php) then overriding the functions *append*, *prepend*, and
@@ -192,7 +193,7 @@ to go.  At the minimum for HTML you should just use '<' and '>', but the braces,
 JavaScript and CSS.  Line breaks should be rare with minification so they may as well be included.  Whitespace is included by
 default as it is quite an effective addition but does significantly hurt performance.  Be aware that all chars are matched
 within the text of the website too (this module does not consider the DOM structure), and whitespace is particularly
-common in text.  Adding semi-colon & single-quote to endsWith, dot & hash & backslash to startsWith, and double quotes
+common in text.  Adding semi-colon & single-quote to endsWith, dot & hash & backslash to startsWith, and double-quotes
 to both will give higher fragmentation and more potential to identify duplicates but noticeably slow things down.
 
 The following options are related to finding deduplication matches and performing deduplication replacements.  The main
@@ -210,8 +211,8 @@ options object contains configuration for additional deduplication behavior.
 You may override some or all of these options at *options.dedupe*, your options will be merged into the defaults.
 You can set *options.dedupe* to false to disable deduplication.
 
-Tip: Do not add single-quotes to startsWith, use backslash instead since single quotes are escaped: `'\\\\'`.  Conversely,
-don't add backslashes to endsWith.
+Warning: Do not add single-quotes to startsWith, use backslash instead (`'\\\\'`) since single quotes are escaped.
+Conversely, don't add backslashes to endsWith.
 
 ## Minify options
 
