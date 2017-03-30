@@ -153,7 +153,7 @@ The deduplication of the file is reconstructed on the server with PHP preprocess
 with a PHP include to a file with the replacement variables (*options.vFile*) and the contents of the file is echo'd
 as a PHP string.  This works with HTML/CSS/JS files if they are set to be preprocessed by PHP on the server.
 
-Replacements are performed in the string by substituting portions of duplicated text with '.$var.' - where the names of
+Replacements are performed in the string by substituting portions of duplicated text with `'.$var.'` - where the names of
 the vars are automatically generated to be as short as possible.  Therefore each file has some overhead (30+ chars\*\*), each
 replacement instance has some overhead (3+ to 6+ chars\*), and the storage of
 the original text has some overhead too (6 chars for the vFile header and 6+ chars\* per string plus the length of the string).
@@ -192,8 +192,8 @@ to go.  At the minimum for HTML you should just use '<' and '>', but the braces,
 JavaScript and CSS.  Line breaks should be rare with minification so they may as well be included.  Whitespace is included by
 default as it is quite an effective addition but does significantly hurt performance.  Be aware that all chars are matched
 within the text of the website too (this module does not consider the DOM structure), and whitespace is particularly
-common in text.  Adding semi-colons to endsWith, dots and hashes to startsWith, and single & double quotes to both will
-give higher fragmentation and more potential to identify duplicates but noticeably slow things down.
+common in text.  Adding semi-colon & single-quote to endsWith, dot & hash & backslash to startsWith, and double quotes
+to both will give higher fragmentation and more potential to identify duplicates but noticeably slow things down.
 
 The following options are related to finding deduplication matches and performing deduplication replacements.  The main
 options object contains configuration for additional deduplication behavior.
