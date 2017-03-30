@@ -644,13 +644,16 @@ var webarchiver = {};
 
         // Get the slugified title.
         slugifySlug: function (str) {
-            var title = str.match(/<title[^>]*>([^<]+)<\/title>/)[1];
-            if (title != '') {
-                if (this.options.slugifyIgnore) {
-                    title = title.replace(new RegExp(this.options.slugifyIgnore.join('|'), 'ig'), '');
-                }
+            var match = str.match(/<title[^>]*>([^<]+)<\/title>/);
+            if (match) {
+                var title = match[1];
                 if (title != '') {
-                    return title.toLowerCase().trim().replace(/ /g, '-').replace(/[^\w-]+/g, '');
+                    if (this.options.slugifyIgnore) {
+                        title = title.replace(new RegExp(this.options.slugifyIgnore.join('|'), 'ig'), '');
+                    }
+                    if (title != '') {
+                        return title.toLowerCase().trim().replace(/ /g, '-').replace(/[^\w-]+/g, '');
+                    }
                 }
             }
             return false;
