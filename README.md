@@ -58,7 +58,7 @@ wa.webArchiver({
     dedupe: {
         minLength: 0,
         minSaving: 8,
-        startsWith: ['<', '{', '\\(', '\\[', '"', "\\'", '#', '\\.'],
+        startsWith: ['<', '{', '\\(', '\\[', '"', "\\\\", '#', '\\.'],
         endsWith: ['>', '}', '\\)', '\\]', '"', "\\'", '\\n', '\\s', ';']
     }
 });
@@ -207,6 +207,9 @@ options object contains configuration for additional deduplication behavior.
 
 You may override some or all of these options at *options.dedupe*, your options will be merged into the defaults.
 You can set *options.dedupe* to false to disable deduplication.
+
+Tip: Do not add single-quotes to startsWith, use backslash instead since single quotes are escaped: `'\\\\'`.  Conversely,
+don't add backslashes to endsWith.
 
 ## Minify options
 

@@ -268,7 +268,11 @@ var webarchiver = {};
                 this.setOccTotal(match);
                 match.allowed = this.replacementAllowed(match);
                 if (match.allowed) {
-                    match.var = this.varName;
+                    var varTaken = false;
+                    if (!match.var) {
+                        match.var = this.varName;
+                        varTaken = true;
+                    }
                     match.reps = match.reps ? match.reps : 0;
 
                     // Make the replacements.
@@ -281,8 +285,10 @@ var webarchiver = {};
                     }
 
                     if (match.reps) {
-                        // varName has been spent, so update to another one.
-                        this.varName = this.nextVarName(this.varName);
+                        if (varTaken) {
+                            // varName has been spent, so update to another one.
+                            this.varName = this.nextVarName(this.varName);
+                        }
                     }
                     else {
                         match.var = null;
@@ -453,7 +459,7 @@ var webarchiver = {};
 
         // Adds slashes to the contents of a file to make it compatible with deduplication.
         addSlashes: function (str) {
-            return (str + '').replace(/'/g, "\'").replace(/\\/g, '\\');
+            return (str + '').replace(/'/g, "\\'").replace(/\\/g, '\\');
         },
 
         // Build the append string to place at the end of each deduplicated file.

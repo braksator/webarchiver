@@ -186,7 +186,7 @@ describe('#doReplace', function () {
 describe('#nextVarName', function () {
 
     it('should change 9z ---> a0', function () {
-        expect(app.nextVarName('z')).to.equal("a0");
+        expect(app.nextVarName('9z')).to.equal("a0");
     });
     it('should change z ---> a0', function () {
         expect(app.nextVarName('z')).to.equal("a0");
@@ -319,7 +319,8 @@ describe('#webArchiver', function () {
 
         var options = {
             files: "test/testdata/single.html",
-            output: dir
+            output: dir,
+            writeState: true
         };
 
         // Act
@@ -338,6 +339,7 @@ describe('#webArchiver', function () {
         // Does the output contain PHP replacements?
         expect(buf1.toString()).to.include("<?php");
         expect(buf1.toString()).to.include("'.$");
+
     });
 
 
