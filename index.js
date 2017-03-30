@@ -161,6 +161,8 @@ var webarchiver = {};
 
         // File processing function.
         processFiles: function () {
+            var ctx = this;
+
             // Work out the slugify stuff, if applicable.
             if (this.options.slugify) {
                 for (var fileKey = 0; fileKey < this.numFiles; ++fileKey) {
@@ -219,25 +221,11 @@ var webarchiver = {};
                                 var gen = matchesGen.next().value;
                                 while (gen !== undefined) {
                                     var match = gen.value;
-                                    if (match.allowed) {
-                                        var varTaken = false;
-                                        if (!match.var) {
-                                            match.var = this.varName;
-                                            varTaken = true;
-                                        }
-                                        file.frags = this.doReplace(file.frags, match, file, fileKey);
-                                        if (match.reps) {
-                                            if (varTaken) {
-                                                // varName has been spent, so update to another one.
-                                                this.varName = this.nextVarName(this.varName);
-                                                // Previously unused match is now used, so update it.
-                                                this.batchUpdate('matches', gen.key, match);
-                                            }
-                                        }
-                                        else {
-                                            match.var = null;
-                                        }
-                                    }
+                                    this.matchReplace(match, function() {
+                                        file.frags = ctx.doReplace(file.frags, match, file, fileKey);
+                                    }, function () {
+                                        ctx.batchUpdate('matches', gen.key, match);
+                                    });
                                     gen = matchesGen.next().value;
                                 }
 
@@ -263,38 +251,50 @@ var webarchiver = {};
 
         // Act on new matches.
         processNewMatches: function (new_matches) {
+            var ctx = this;
             for (var m = 0; m < new_matches.length; ++m) {
                 var match = this.batchRead('matches', new_matches[m]);
                 this.setOccTotal(match);
                 match.allowed = this.replacementAllowed(match);
-                if (match.allowed) {
-                    var varTaken = false;
-                    if (!match.var) {
-                        match.var = this.varName;
-                        varTaken = true;
-                    }
+                this.matchReplace(match, function() {
                     match.reps = match.reps ? match.reps : 0;
 
                     // Make the replacements.
                     for (var fileKey in match.occ) {
-                        var file = this.batchRead('files', fileKey);
+                        var file = ctx.batchRead('files', fileKey);
                         if (match.occ.hasOwnProperty(fileKey)) {
-                            file.frags = this.doReplace(file.frags, match, file, fileKey);
+                            file.frags = ctx.doReplace(file.frags, match, file, fileKey);
                         }
-                        this.batchUpdate('files', fileKey, file);
+                        ctx.batchUpdate('files', fileKey, file);
                     }
+                }, function () {
+                    ctx.batchUpdate('matches', new_matches[m], match);
+                });
+            }
+        },
 
-                    if (match.reps) {
-                        if (varTaken) {
-                            // varName has been spent, so update to another one.
-                            this.varName = this.nextVarName(this.varName);
-                        }
-                    }
-                    else {
-                        match.var = null;
-                    }
-                    this.batchUpdate('matches', new_matches[m], match);
+        // Match replacements.
+        matchReplace: function (match, replaceCallback, afterCallback) {
+            if (match.allowed) {
+                var varTaken = false;
+                if (!match.var) {
+                    match.var = this.varName;
+                    varTaken = true;
                 }
+
+                replaceCallback();
+
+                if (match.reps) {
+                    if (varTaken) {
+                        // varName has been spent, so update to another one.
+                        this.varName = this.nextVarName(this.varName);
+                    }
+                }
+                else {
+                    match.var = null;
+                }
+
+                afterCallback();
             }
         },
 
