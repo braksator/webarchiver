@@ -221,10 +221,8 @@ var webarchiver = {};
                                 var gen = matchesGen.next().value;
                                 while (gen !== undefined) {
                                     var match = gen.value;
-                                    this.matchReplace(match, function() {
+                                    this.matchReplace(match, gen.key, function() {
                                         file.frags = ctx.doReplace(file.frags, match, file, fileKey);
-                                    }, function () {
-                                        ctx.batchUpdate('matches', gen.key, match);
                                     });
                                     gen = matchesGen.next().value;
                                 }
@@ -256,9 +254,8 @@ var webarchiver = {};
                 var match = this.batchRead('matches', new_matches[m]);
                 this.setOccTotal(match);
                 match.allowed = this.replacementAllowed(match);
-                this.matchReplace(match, function() {
-                    match.reps = match.reps ? match.reps : 0;
-
+                match.reps = match.reps ? match.reps : 0;
+                this.matchReplace(match, new_matches[m], function() {
                     // Make the replacements.
                     for (var fileKey in match.occ) {
                         var file = ctx.batchRead('files', fileKey);
@@ -267,20 +264,19 @@ var webarchiver = {};
                         }
                         ctx.batchUpdate('files', fileKey, file);
                     }
-                }, function () {
-                    ctx.batchUpdate('matches', new_matches[m], match);
                 });
             }
         },
 
         // Match replacements.
-        matchReplace: function (match, replaceCallback, afterCallback) {
+        matchReplace: function (match, matchKey, replaceCallback) {
             if (match.allowed) {
                 var varTaken = false;
                 if (!match.var) {
                     match.var = this.varName;
                     varTaken = true;
                 }
+                var repsOld = match.reps;
 
                 replaceCallback();
 
@@ -289,12 +285,14 @@ var webarchiver = {};
                         // varName has been spent, so update to another one.
                         this.varName = this.nextVarName(this.varName);
                     }
+                    if (match.reps != repsOld) {
+                        this.batchUpdate('matches', matchKey, match);
+                    }
                 }
                 else {
                     match.var = null;
                 }
 
-                afterCallback();
             }
         },
 
