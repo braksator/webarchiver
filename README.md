@@ -1,4 +1,5 @@
-[![js-standard-style](https://img.shields.io/badge/I%20like-purple-663399.svg)](#)
+[![npm](https://img.shields.io/npm/dt/webarchiver.svg)](#)
+[![js-standard-style](https://img.shields.io/badge/Supported%20by-WordCrush-fa51ae.svg)](https://www.wordcrush.net)
 
 WebArchiver
 ===========
@@ -279,9 +280,9 @@ The 'i' key is a bool for case insensitivity.
 
 ## Why PHP?
 
-PHP is common, hosting is cheap, lots of people understand it, and syntactically it is quite succinct for our
-purposes.  It seems like an ideal choice here.  However, I am open to be convinced to support another method of
-preprocessing.
+PHP is common, [hosting is cheap](https://www.websamford.com/user/cart.php?gid=4), lots of people understand it, and
+syntactically it is quite succinct for our purposes.  It seems like an ideal choice here.  However, I am open to be
+convinced to support another method of preprocessing.
 
 While we're on the subject the PHP generated here is quite basic; *Include* and *echo* statements, variable
 assignment, and string concatenation.  You should have no worries about which version of PHP to run.
