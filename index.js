@@ -624,7 +624,11 @@ var webarchiver = {};
 
         // Minify function.
         minify: function (str) {
-            return minify(str, this.options.minify);
+            try {
+                return minify(str, this.options.minify);
+            } catch (err) {
+                return str;
+            }
         },
 
         // Crude form element disabler.
