@@ -653,7 +653,7 @@ var webarchiver = {};
                         title = title.replace(new RegExp(this.options.slugifyIgnore.join('|'), 'ig'), '');
                     }
                     if (title != '') {
-                        return title.toLowerCase().trim().replace(/ /g, '-').replace(/[^\w-]+/g, '');
+                        return title.toLowerCase().trim().replace(/ /g, '-').replace(/[^\w-]+/g, '').replace(/-+/g, '-');
                     }
                 }
             }
