@@ -423,7 +423,8 @@ var webarchiver = {};
         // Clean up a string with replacements in it.
         fixCodes: function (str) {
             str = this.replaceAll(str, ".''", '');
-            str = this.replaceAll(str, "''.", '');
+            // Replaces ''. with empty string as long as the first ' is not escaped.
+            str = this.replaceAll(str, "([^\\\\])''.", '$1');
             return str;
         },
 
