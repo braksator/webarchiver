@@ -424,13 +424,16 @@ var webarchiver = {};
         fixCodes: function (str) {
             str = this.replaceAll(str, ".''", '');
             // Replaces ''. with empty string as long as the first ' is not escaped.
-            str = this.replaceAll(str, "([^\\\\])''.", '$1');
+            str = this.replaceAll(str, "([^\\\\])''\\.", '$1', true);
             return str;
         },
 
         // Replace all occurrences of a substring.
-        replaceAll: function (str, find, replace) {
-            return str.replace(new RegExp(this.escapeRegExp(find), 'g'), replace);
+        replaceAll: function (str, find, replace, noEscape) {
+            if (!noEscape) {
+                find = this.escapeRegExp(find);
+            }
+            return str.replace(new RegExp(find, 'g'), replace);
         },
 
         // For use with replaceAll().

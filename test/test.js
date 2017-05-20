@@ -302,6 +302,12 @@ describe('#webArchiver', function () {
         }).to.throw("No input files found.");
     });
 
+    it('should fix codes in a string', function () {
+        var str = "$x=''.$y.''.$z.'';$a='x\\''.'x'";
+        var res = app.fixCodes(str);
+        expect(res).to.equal("$x=$y.$z;$a='x\\''.'x'");
+    });
+
     it('should throw an error when output options do not make sense', function () {
         expect(function () {
             app.webArchiver({files: "test/testdata/*.html"});
