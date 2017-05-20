@@ -302,6 +302,12 @@ describe('#webArchiver', function () {
         }).to.throw("No input files found.");
     });
 
+    it('should add slashes to a string', function () {
+        var str = "Rock 'n' roll \\ Jazz";
+        var slashed = app.addSlashes(str);
+        expect(slashed).to.equal("Rock \\'n\\' roll \\\\ Jazz");
+    });
+
     it('should fix codes in a string', function () {
         var str = "$x=''.$y.''.$z.'';$a='x\\''.'x'";
         var res = app.fixCodes(str);

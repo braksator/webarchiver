@@ -461,7 +461,7 @@ var webarchiver = {};
 
         // Adds slashes to the contents of a file to make it compatible with deduplication.
         addSlashes: function (str) {
-            return (str + '').replace(/\\/g, '\\').replace(/'/g, "\\'");
+            return (str + '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
         },
 
         // Build the append string to place at the end of each deduplicated file.
