@@ -279,7 +279,7 @@ The 'i' key is a bool for case insensitivity.
 
 ## Why PHP?
 
-PHP is common, [hosting is cheap](https://www.websamford.com/user/cart.php?gid=4), lots of people understand it, and
+PHP is common, hosting is cheap, lots of people understand it, and
 syntactically it is quite succinct for our purposes.  It seems like an ideal choice here.  However, I am open to be
 convinced to support another method of preprocessing.
 
