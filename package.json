@@ -1,6 +1,6 @@
 {
   "name": "webarchiver",
-  "version": "3.6.12",
+  "version": "3.6.15",
   "description": "Deduplicates and compresses a collection of website files and the resulting files must be interpreted with PHP.",
   "keywords": [
     "dedupe",
@@ -26,23 +26,23 @@
     "url": "https://github.com/braksator/webarchiver.git"
   },
   "dependencies": {
-    "command-line-args": "^4.0.1",
-    "globby": "^6.1.0",
-    "html-minifier": "^3.3.1",
-    "isbinaryfile": "^3.0.2",
-    "jsonfile": "^2.4.0",
-    "merge-options": "0.0.64",
-    "mkdirp": "^0.5.1",
-    "fs-extra": "^2.0.0"
+    "command-line-args": "^6.0.1",
+    "globby": "^14.1.0",
+    "html-minifier": "^4.0.0",
+    "isbinaryfile": "^5.0.4",
+    "jsonfile": "^6.1.0",
+    "merge-options": "3.0.4",
+    "mkdirp": "^3.0.1",
+    "fs-extra": "^11.3.0"
   },
   "devDependencies": {
-    "chai": "^3.5.0",
-    "chai-fs": "^1.0.0",
-    "del": "^2.2.2",
-    "get-folder-size": "^1.0.0",
+    "chai": "^5.2.0",
+    "chai-fs": "^2.0.0",
+    "del": "^8.0.0",
+    "get-folder-size": "^5.0.0",
     "istanbul": "^0.4.5",
-    "markdown-table": "^1.1.0",
-    "mocha": "^3.2.0",
-    "mocha-eslint": "^3.0.1"
+    "markdown-table": "^3.0.4",
+    "mocha": "^11.1.0",
+    "mocha-eslint": "^7.0.0"
   }
 }
